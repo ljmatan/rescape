@@ -24,4 +24,9 @@ abstract class OrdersAPI {
     await http.delete(Uri.parse(
         'https://rescape-72b1b-default-rtdb.europe-west1.firebasedatabase.app/orders/current/$key.json'));
   }
+
+  static Future<http.Response> createReturn(Map body) async => await http.post(
+      Uri.parse(
+          'https://rescape-72b1b-default-rtdb.europe-west1.firebasedatabase.app/orders/returns.json'),
+      body: jsonEncode(body));
 }

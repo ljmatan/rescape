@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:rescape/logic/cache/prefs.dart';
+import 'package:rescape/ui/screens/auth/auth_screen.dart';
 import 'package:rescape/ui/screens/main/bloc/main_view_controller.dart';
 import 'package:rescape/ui/screens/main/bottom_nav_bar/nav_bar_display.dart';
 import 'package:rescape/ui/screens/main/pages/home/home_page.dart';
@@ -38,37 +39,41 @@ class _MainViewState extends State<MainView> {
 
   bool _authenticated = Prefs.instance.getBool('authenticated') ?? false;
 
+  void _successfulAuthentication() => setState(() => _authenticated = true);
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      resizeToAvoidBottomInset: false,
-      body: Stack(
-        children: [
-          Column(
-            children: [
-              Expanded(
-                child: PageView(
-                  controller: _pageController,
-                  physics: const NeverScrollableScrollPhysics(),
+      resizeToAvoidBottomInset: !_authenticated,
+      body: _authenticated
+          ? Stack(
+              children: [
+                Column(
                   children: [
-                    HomePage(),
-                    InventoryPage(),
-                    OrdersPage(),
-                    ReportsPage(),
+                    Expanded(
+                      child: PageView(
+                        controller: _pageController,
+                        physics: const NeverScrollableScrollPhysics(),
+                        children: [
+                          HomePage(),
+                          InventoryPage(),
+                          OrdersPage(),
+                          ReportsPage(),
+                        ],
+                      ),
+                    ),
+                    SizedBox(
+                      height: 56 + MediaQuery.of(context).padding.bottom,
+                    ),
                   ],
                 ),
-              ),
-              SizedBox(
-                height: 56 + MediaQuery.of(context).padding.bottom,
-              ),
-            ],
-          ),
-          Positioned(
-            bottom: 0,
-            child: BottomNavBar(),
-          ),
-        ],
-      ),
+                Positioned(
+                  bottom: 0,
+                  child: BottomNavBar(),
+                ),
+              ],
+            )
+          : AuthScreen(authenticated: _successfulAuthentication),
     );
   }
 

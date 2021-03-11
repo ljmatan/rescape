@@ -16,8 +16,7 @@ abstract class ProductList {
         await DB.instance.insert(
           'Products',
           {
-            'product_id': product.value['product_id'],
-            'firebase_id': product.key,
+            'product_id': product.key,
             'name': product.value['name'],
             'barcode': product.value['barcode'],
             'measure': product.value['measure'],
@@ -30,8 +29,7 @@ abstract class ProductList {
         );
       _categories.add(product.value['category']);
       _instance.add(ProductModel(
-        id: product.value['product_id'],
-        firebaseID: product.key,
+        id: cached ? product.value['product_id'] : product.key,
         name: product.value['name'],
         barcode: product.value['barcode'].toString(),
         category: product.value['category'],

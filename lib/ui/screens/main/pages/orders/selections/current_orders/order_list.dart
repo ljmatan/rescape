@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:rescape/data/current_order.dart';
 import 'package:rescape/data/models/current_order_model.dart';
 import 'package:rescape/data/models/product_model.dart';
 import 'package:rescape/ui/screens/main/pages/orders/bloc/view_controller.dart';
@@ -108,6 +109,7 @@ class OrderList extends StatelessWidget {
                       ),
                     ),
                     onTap: () {
+                      CurrentOrder.setInstance(order);
                       Navigator.of(context).push(
                         MaterialPageRoute(
                           builder: (BuildContext context) => CameraScreen(),

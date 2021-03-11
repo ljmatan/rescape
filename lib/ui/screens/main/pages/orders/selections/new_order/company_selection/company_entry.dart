@@ -3,6 +3,7 @@ import 'package:rescape/data/company_list.dart';
 import 'package:rescape/data/models/company_model.dart';
 import 'package:rescape/ui/screens/main/pages/orders/bloc/view_controller.dart';
 import 'package:rescape/ui/screens/main/pages/orders/selection_display.dart';
+import 'package:rescape/ui/screens/main/pages/orders/selections/new_order/vehicle_selection/vehicle_selection.dart';
 import 'package:rescape/ui/screens/scanner/camera_screen.dart';
 
 class LocationNumberRow extends StatelessWidget {
@@ -126,15 +127,22 @@ class _CompanyEntryState extends State<CompanyEntry> {
             crossFadeState: _crossFadeState,
           ),
         ),
-        onTap: () {
+        onTap: () async {
           if (_companyLocations.length > 1)
             setState(() => _crossFadeState = CrossFadeState.showSecond);
           else {
-            Navigator.of(context).push(MaterialPageRoute(
-                builder: (BuildContext context) => CameraScreen(
-                    location: LocationList.instance
-                        .firstWhere((e) => e.companyName == widget.label))));
-            OrdersViewController.change(SelectionDisplay());
+            final selected = await showDialog(
+              context: context,
+              barrierColor: Colors.white,
+              builder: (context) => VehicleSelection(),
+            );
+            if (selected != null) {
+              Navigator.of(context).push(MaterialPageRoute(
+                  builder: (BuildContext context) => CameraScreen(
+                      location: LocationList.instance
+                          .firstWhere((e) => e.companyName == widget.label))));
+              OrdersViewController.change(SelectionDisplay());
+            }
           }
         },
       ),

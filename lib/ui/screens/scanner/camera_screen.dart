@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:rescape/data/current_order.dart';
 import 'package:rescape/data/models/company_model.dart';
 import 'package:rescape/data/models/product_model.dart';
+import 'package:rescape/data/models/vehicle_model.dart';
 import 'package:rescape/data/new_order.dart';
 import 'package:rescape/data/product_list.dart';
 import 'package:rescape/ui/screens/scanner/bloc/last_scanned_controller.dart';
@@ -21,8 +22,9 @@ import 'package:vibration/vibration.dart';
 
 class CameraScreen extends StatefulWidget {
   final LocationModel location;
+  final VehicleModel vehicle;
 
-  CameraScreen({this.location});
+  CameraScreen({this.location, this.vehicle});
 
   @override
   State<StatefulWidget> createState() {
@@ -95,7 +97,7 @@ class _CameraScreenState extends State<CameraScreen>
 
           scannedProduct.barcode = scannedProduct.barcode.substring(0, 7);
 
-          Future.delayed(const Duration(seconds: 3), () => _scanning(true));
+          Future.delayed(const Duration(seconds: 1), () => _scanning(true));
         } else
           print('Code $barcode not registered');
       } else
@@ -165,6 +167,7 @@ class _CameraScreenState extends State<CameraScreen>
                       CurrentOrderButton(
                         scanning: _scanning,
                         location: widget.location,
+                        vehicle: widget.vehicle,
                       ),
                       if (CurrentOrder.instance != null)
                         OrderedItemsButton(

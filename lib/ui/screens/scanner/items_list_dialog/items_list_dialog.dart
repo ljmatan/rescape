@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:rescape/data/current_order.dart';
 import 'package:rescape/data/models/company_model.dart';
 import 'package:rescape/data/models/product_model.dart';
+import 'package:rescape/data/models/vehicle_model.dart';
 import 'package:rescape/data/new_order.dart';
+import 'package:rescape/data/user_data.dart';
 import 'package:rescape/logic/api/orders.dart';
 import 'package:rescape/ui/screens/scanner/items_list_dialog/success_dialog.dart';
 
@@ -10,11 +12,13 @@ class ItemsListDialog extends StatefulWidget {
   final String label;
   final Function scanning;
   final LocationModel location;
+  final VehicleModel vehicle;
 
   ItemsListDialog({
     @required this.label,
     @required this.scanning,
     @required this.location,
+    @required this.vehicle,
   });
 
   @override
@@ -56,7 +60,11 @@ class _ItemsListDialogState extends State<ItemsListDialog> {
                   ),
                   child: Center(
                     child: Text(
-                      widget.location != null ? 'New Order' : 'Current Order',
+                      widget.location != null
+                          ? 'New Order'
+                          : CurrentOrder.instance != null
+                              ? 'Current Order'
+                              : 'New Return',
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 19,
@@ -173,8 +181,11 @@ class _ItemsListDialogState extends State<ItemsListDialog> {
                             context: context,
                             barrierDismissible: false,
                             barrierColor: Colors.white70,
-                            builder: (context) =>
-                                Center(child: CircularProgressIndicator()));
+                            builder: (context) => WillPopScope(
+                                child: Center(
+                                  child: CircularProgressIndicator(),
+                                ),
+                                onWillPop: () async => false));
                         await OrdersAPI.create(
                           {
                             'location': widget.location.id,
@@ -186,6 +197,10 @@ class _ItemsListDialogState extends State<ItemsListDialog> {
                                   'amount': item.measure,
                                 },
                             ],
+                            'vehicle': {
+                              'model': widget.vehicle.model,
+                              'plates': widget.vehicle.plates,
+                            },
                           },
                         );
                         Navigator.pop(context);
@@ -196,13 +211,16 @@ class _ItemsListDialogState extends State<ItemsListDialog> {
                           builder: (context) =>
                               SuccessDialog(label: 'Order added!'),
                         );
-                      } else {
+                      } else if (CurrentOrder.instance != null) {
                         showDialog(
                             context: context,
                             barrierDismissible: false,
                             barrierColor: Colors.white70,
-                            builder: (context) =>
-                                Center(child: CircularProgressIndicator()));
+                            builder: (context) => WillPopScope(
+                                child: Center(
+                                  child: CircularProgressIndicator(),
+                                ),
+                                onWillPop: () async => false));
                         await OrdersAPI.orderPrepared(
                           {
                             'location': CurrentOrder.instance.location.id,
@@ -215,6 +233,10 @@ class _ItemsListDialogState extends State<ItemsListDialog> {
                                   'amount': item.measure,
                                 },
                             ],
+                            'vehicle': {
+                              'model': CurrentOrder.instance.vehicle.model,
+                              'plates': CurrentOrder.instance.vehicle.plates,
+                            },
                           },
                           CurrentOrder.instance.key,
                         );
@@ -222,8 +244,41 @@ class _ItemsListDialogState extends State<ItemsListDialog> {
                         showDialog(
                           context: context,
                           barrierDismissible: false,
+                          barrierColor: Colors.white70,
                           builder: (context) => SuccessDialog(
                               label: 'Order successfully prepared!'),
+                        );
+                      } else {
+                        showDialog(
+                            context: context,
+                            barrierDismissible: false,
+                            barrierColor: Colors.white70,
+                            builder: (context) => WillPopScope(
+                                child: Center(
+                                  child: CircularProgressIndicator(),
+                                ),
+                                onWillPop: () async => false));
+                        await OrdersAPI.createReturn(
+                          {
+                            'time':
+                                CurrentOrder.instance.time.toIso8601String(),
+                            'items': [
+                              for (var item in NewOrder.instance)
+                                {
+                                  'id': item.product.id,
+                                  'amount': item.measure,
+                                },
+                            ],
+                            'submitter': UserData.instance.name,
+                          },
+                        );
+                        Navigator.pop(context);
+                        showDialog(
+                          context: context,
+                          barrierDismissible: false,
+                          barrierColor: Colors.white70,
+                          builder: (context) =>
+                              SuccessDialog(label: 'Return info forwarded'),
                         );
                       }
                     },

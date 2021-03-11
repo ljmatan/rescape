@@ -34,8 +34,12 @@ class AddDialog extends StatelessWidget {
                         ),
                       ],
                     ),
-                    onTap: () => Navigator.of(context).push(MaterialPageRoute(
-                        builder: (BuildContext context) => AddProductScreen())),
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.of(context).push(MaterialPageRoute(
+                          builder: (BuildContext context) =>
+                              AddProductScreen()));
+                    },
                   ),
                 ),
                 const SizedBox(height: 12),

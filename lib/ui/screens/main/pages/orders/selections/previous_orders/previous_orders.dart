@@ -9,12 +9,12 @@ import 'package:rescape/ui/screens/main/pages/orders/bloc/view_controller.dart';
 import 'package:rescape/ui/screens/main/pages/orders/selection_display.dart';
 import 'package:rescape/ui/screens/main/pages/orders/selections/current_orders/order_list.dart';
 
-class CurrentOrders extends StatelessWidget {
+class PreviousOrders extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
       child: FutureBuilder(
-        future: OrdersAPI.getCurrent(),
+        future: OrdersAPI.getProcessed(),
         builder: (context, orders) {
           if (orders.connectionState != ConnectionState.done ||
               orders.hasError ||
@@ -64,7 +64,7 @@ class CurrentOrders extends StatelessWidget {
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(4),
                           boxShadow: kElevationToShadow[1],
-                          color: Colors.white,
+                          color: Colors.grey.shade300,
                         ),
                         child: SizedBox(
                           width: MediaQuery.of(context).size.width,
@@ -82,8 +82,7 @@ class CurrentOrders extends StatelessWidget {
                                       ? ' ' + order.location.number
                                       : ''),
                               style: TextStyle(
-                                color: Theme.of(context).primaryColor,
-                                fontWeight: FontWeight.bold,
+                                color: Colors.black,
                                 fontSize: 16,
                               ),
                             ),

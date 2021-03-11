@@ -29,8 +29,11 @@ class EmployeeManagment extends StatelessWidget {
             ),
           ],
         ),
-        onTap: () => Navigator.of(context)
-            .push(MaterialPageRoute(builder: (BuildContext context) => route)),
+        onTap: () {
+          Navigator.pop(context);
+          Navigator.of(context).push(
+              MaterialPageRoute(builder: (BuildContext context) => route));
+        },
       ),
     );
   }

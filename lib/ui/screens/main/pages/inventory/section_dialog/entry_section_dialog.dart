@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:rescape/data/models/product_model.dart';
 import 'package:rescape/data/product_list.dart';
+import 'package:rescape/data/user_data.dart';
 import 'package:rescape/logic/api/products.dart';
 import 'package:rescape/logic/storage/local.dart';
 import 'package:rescape/ui/screens/main/pages/inventory/section_dialog/bloc/selected_section_controller.dart';
+import 'package:rescape/ui/shared/result_dialog.dart';
 
 class EntrySectionDialog extends StatefulWidget {
   final ProductModel product;
@@ -17,10 +19,15 @@ class EntrySectionDialog extends StatefulWidget {
 }
 
 class _EntrySectionDialogState extends State<EntrySectionDialog> {
+  TextEditingController _availableController;
+
   @override
   void initState() {
-    SelectedSectionController.init();
     super.initState();
+    SelectedSectionController.init();
+    if (UserData.isOwner || UserData.isManager)
+      _availableController =
+          TextEditingController(text: widget.product.available.toString());
   }
 
   @override
@@ -28,7 +35,8 @@ class _EntrySectionDialogState extends State<EntrySectionDialog> {
     return Align(
       alignment: Alignment.bottomCenter,
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: EdgeInsets.fromLTRB(
+            12, 0, 12, 12 + MediaQuery.of(context).viewInsets.bottom),
         child: Material(
           elevation: 2,
           color: Colors.white,
@@ -38,11 +46,32 @@ class _EntrySectionDialogState extends State<EntrySectionDialog> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  widget.product.name,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 18),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: Text(
+                    widget.product.name,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(fontSize: 18),
+                  ),
                 ),
+                if (UserData.isOwner || UserData.isManager)
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('Available:'),
+                      SizedBox(
+                        width: MediaQuery.of(context).size.width / 3,
+                        child: TextField(
+                          controller: _availableController,
+                          textAlign: TextAlign.center,
+                          keyboardType: TextInputType.number,
+                          decoration: InputDecoration(
+                            border: OutlineInputBorder(),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 Padding(
                   padding: const EdgeInsets.only(bottom: 16, top: 10),
                   child: Text(
@@ -99,7 +128,7 @@ class _EntrySectionDialogState extends State<EntrySectionDialog> {
                                     Center(child: CircularProgressIndicator()));
                             try {
                               await ProductsAPI.setProductSection(
-                                  widget.product.firebaseID, i);
+                                  widget.product.id, i);
                               await DB.instance.update(
                                 'Products',
                                 {'section': i},
@@ -122,6 +151,113 @@ class _EntrySectionDialogState extends State<EntrySectionDialog> {
                       ),
                   ],
                 ),
+                if (UserData.isOwner || UserData.isManager)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 14),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: GestureDetector(
+                            behavior: HitTestBehavior.opaque,
+                            child: SizedBox(
+                              width: MediaQuery.of(context).size.width,
+                              height: 48,
+                              child: Center(
+                                child: Text(
+                                  'CANCEL',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          child: GestureDetector(
+                            child: DecoratedBox(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(4),
+                                color: Theme.of(context).primaryColor,
+                                boxShadow: kElevationToShadow[1],
+                              ),
+                              child: SizedBox(
+                                width: MediaQuery.of(context).size.width,
+                                height: 48,
+                                child: Center(
+                                  child: Text(
+                                    'UPDATE',
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            onTap: () async {
+                              if (_availableController.text ==
+                                  widget.product.available.toString())
+                                Navigator.pop(context);
+                              else if (double.tryParse(
+                                      _availableController.text) ==
+                                  null) {
+                                Navigator.of(context);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                        content:
+                                            Text('You must enter a number')));
+                              } else {
+                                showDialog(
+                                  context: context,
+                                  barrierDismissible: false,
+                                  barrierColor: Colors.white70,
+                                  builder: (context) => WillPopScope(
+                                    child: Center(
+                                        child: CircularProgressIndicator()),
+                                    onWillPop: () async => false,
+                                  ),
+                                );
+                                try {
+                                  final double newAmount =
+                                      double.parse(_availableController.text);
+                                  final response =
+                                      await ProductsAPI.setProductAvailability(
+                                          widget.product.id, newAmount);
+                                  if (response.statusCode == 200) {
+                                    ProductList.instance
+                                        .firstWhere(
+                                            (e) => e.id == widget.product.id)
+                                        .available = newAmount;
+                                    await DB.instance.update(
+                                      'Products',
+                                      {'available': newAmount},
+                                      where: 'product_id = ?',
+                                      whereArgs: [widget.product.id],
+                                    );
+                                  }
+                                  Navigator.pop(context);
+                                  showDialog(
+                                    context: context,
+                                    barrierColor: Colors.white70,
+                                    barrierDismissible: false,
+                                    builder: (context) => ResultDialog(
+                                        statusCode: response.statusCode),
+                                  );
+                                } catch (e) {
+                                  Navigator.pop(context);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(content: Text('$e')));
+                                }
+                              }
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
               ],
             ),
           ),
@@ -133,6 +269,7 @@ class _EntrySectionDialogState extends State<EntrySectionDialog> {
   @override
   void dispose() {
     SelectedSectionController.dispose();
+    _availableController?.dispose();
     super.dispose();
   }
 }

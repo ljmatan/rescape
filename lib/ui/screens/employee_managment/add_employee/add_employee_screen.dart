@@ -1,7 +1,7 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:rescape/logic/api/employees.dart';
+import 'package:rescape/logic/api/organisation.dart';
 import 'package:rescape/ui/shared/result_dialog.dart';
 
 class AddEmployeeScreen extends StatefulWidget {
@@ -179,10 +179,11 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
                               username = username.replaceAll('ć', 'c');
                               username = username.replaceAll('š', 's');
                               username = username.replaceAll('ž', 'z');
-                              username = username.replaceAll('đ', 'd');
+                              username =
+                                  username.replaceAll('đ', 'd').toLowerCase();
                               int statusCode;
                               try {
-                                statusCode = (await EmployeesAPI.newEmployee(
+                                statusCode = (await OrganisationAPI.newEmployee(
                                   _firstNameController.text,
                                   _lastNameController.text,
                                   username,

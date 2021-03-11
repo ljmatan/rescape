@@ -1,8 +1,7 @@
 enum Measure { qty, kg }
 
 class ProductModel {
-  int id;
-  String name, barcode, category, firebaseID;
+  String id, name, barcode, category;
   Measure measureType;
   int quantity;
   double available;
@@ -10,7 +9,6 @@ class ProductModel {
 
   ProductModel({
     this.id,
-    this.firebaseID,
     this.name,
     this.barcode,
     this.category,

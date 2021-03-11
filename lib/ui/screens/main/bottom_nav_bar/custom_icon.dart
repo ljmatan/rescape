@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:rescape/ui/screens/main/bloc/main_view_controller.dart';
+import 'package:rescape/ui/screens/main/pages/orders/bloc/view_controller.dart';
+import 'package:rescape/ui/screens/main/pages/orders/selection_display.dart';
 
 class CustomNavBarIcon extends StatelessWidget {
   final IconData icon;
@@ -42,7 +44,10 @@ class CustomNavBarIcon extends StatelessWidget {
             ],
           ),
           onTap: () {
-            if (selected.data != index) MainViewController.change(index);
+            if (selected.data != index)
+              MainViewController.change(index);
+            else if (selected.data == index && index == 2)
+              OrdersViewController.change(SelectionDisplay());
           },
         ),
       ),

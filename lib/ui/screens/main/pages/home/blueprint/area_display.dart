@@ -77,8 +77,9 @@ class AreaDisplay extends StatelessWidget {
                           ],
                         ),
                       ),
-                      if (ProductList.instance
-                              .firstWhere((e) => e.section == index) !=
+                      if (ProductList.instance.firstWhere(
+                              (e) => e.section == index,
+                              orElse: () => null) !=
                           null)
                         for (var product in ProductList.instance
                             .where((e) => e.section == index))

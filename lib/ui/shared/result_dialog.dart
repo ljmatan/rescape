@@ -21,7 +21,7 @@ class ResultDialog extends StatelessWidget {
               children: [
                 Text(
                   statusCode == 200
-                      ? 'Info successfully updated'
+                      ? 'Success! Tap \'OK\' to continue'
                       : 'Error! Please try again later',
                   style: const TextStyle(fontSize: 16),
                 ),

@@ -14,9 +14,8 @@ abstract class DB {
         await db.execute(
           'CREATE TABLE Products ('
           'id INTEGER PRIMARY KEY, '
-          'product_id INTEGER, '
-          'firebase_id TEXT, '
-          'name TEST, '
+          'product_id TEXT, '
+          'name TEXT, '
           'barcode TEXT, '
           'measure TEXT, '
           'available REAL, '
@@ -27,8 +26,9 @@ abstract class DB {
       },
     );
 
-    final Map products =
-        Map.fromIterable(await _instance.rawQuery('SELECT * FROM Products'));
+    final List productList = await _instance.rawQuery('SELECT * FROM Products');
+
+    final Map products = Map.fromIterable(productList);
 
     if (products.isNotEmpty) ProductList.setInstance(products, true);
   }

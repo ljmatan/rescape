@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:rescape/data/product_list.dart';
+import 'package:rescape/data/user_data.dart';
 import 'package:rescape/logic/api/companies.dart';
 import 'package:rescape/logic/api/products.dart';
 import 'package:rescape/logic/cache/prefs.dart';
@@ -30,6 +31,8 @@ void main() async {
   if (ProductList.instance.isEmpty) await ProductsAPI.getList();
 
   await Companies.getList();
+
+  UserData.init();
 
   runApp(MyApp());
 }
