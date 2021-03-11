@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:rescape/logic/i18n/i18n.dart';
 import '../manual_entry/manual_entry_dialog.dart';
 
 class EnterManuallyButton extends StatelessWidget {
@@ -20,7 +21,7 @@ class EnterManuallyButton extends StatelessWidget {
             height: 48,
             child: Center(
               child: Text(
-                'ENTER MANUALLY',
+                I18N.text('ENTER MANUALLY'),
                 style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,

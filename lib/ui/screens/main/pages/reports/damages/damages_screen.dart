@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:rescape/logic/api/reports.dart';
+import 'package:rescape/logic/i18n/i18n.dart';
 import 'package:rescape/ui/screens/main/pages/reports/damages/damage_model.dart';
 import 'package:rescape/ui/shared/result_dialog.dart';
 
@@ -15,7 +16,7 @@ class DamagesScreen extends StatelessWidget {
         automaticallyImplyLeading: false,
         titleSpacing: 12,
         title: Text(
-          'Damages',
+          I18N.text('Damages'),
           style: const TextStyle(color: Colors.black),
         ),
         backgroundColor: Colors.white,
@@ -40,7 +41,7 @@ class DamagesScreen extends StatelessWidget {
                       child: Text(
                         damages.hasError
                             ? damages.error.toString()
-                            : 'No damages recorded',
+                            : I18N.text('No damages recorded'),
                         textAlign: TextAlign.center,
                         style: const TextStyle(fontSize: 16),
                       ),
@@ -98,9 +99,36 @@ class DamagesScreen extends StatelessWidget {
                                       icon: Icon(Icons.image),
                                       onPressed: () => showDialog(
                                         context: context,
-                                        builder: (context) => Center(
-                                          child: Image.memory(
-                                              base64Decode(damage.image)),
+                                        builder: (context) => Material(
+                                          color: Colors.white70,
+                                          child: Stack(
+                                            children: [
+                                              Center(
+                                                child: InteractiveViewer(
+                                                  constrained: false,
+                                                  child: Image.memory(
+                                                    base64Decode(damage.image),
+                                                    width:
+                                                        MediaQuery.of(context)
+                                                            .size
+                                                            .width,
+                                                    height:
+                                                        MediaQuery.of(context)
+                                                            .size
+                                                            .height,
+                                                  ),
+                                                ),
+                                              ),
+                                              Positioned(
+                                                right: 0,
+                                                child: IconButton(
+                                                  icon: Icon(Icons.close),
+                                                  onPressed: () =>
+                                                      Navigator.pop(context),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
                                         ),
                                       ),
                                     ),

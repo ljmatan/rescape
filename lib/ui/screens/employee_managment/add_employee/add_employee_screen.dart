@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:rescape/logic/api/organisation.dart';
+import 'package:rescape/logic/i18n/i18n.dart';
 import 'package:rescape/ui/shared/result_dialog.dart';
 
 class AddEmployeeScreen extends StatefulWidget {
@@ -36,7 +37,7 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 Text(
-                  'New Employee',
+                  I18N.text('New Employee'),
                   style: const TextStyle(
                     fontSize: 21,
                     fontWeight: FontWeight.bold,
@@ -63,7 +64,7 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
                             controller: _firstNameController,
                             decoration: InputDecoration(
                               border: OutlineInputBorder(),
-                              hintText: 'First Name',
+                              hintText: I18N.text('First Name'),
                             ),
                           ),
                         ),
@@ -76,7 +77,7 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
                             controller: _lastNameController,
                             decoration: InputDecoration(
                               border: OutlineInputBorder(),
-                              hintText: 'Last Name',
+                              hintText: I18N.text('Last Name'),
                             ),
                           ),
                         ),
@@ -89,7 +90,7 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('Type:'),
+                      Text(I18N.text('Type') + ':'),
                       SizedBox(
                         width: MediaQuery.of(context).size.width / 2 - 22,
                         child: DropdownButton(
@@ -97,15 +98,15 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
                           isExpanded: true,
                           items: [
                             DropdownMenuItem(
-                              child: Text('Worker'),
+                              child: Text(I18N.text('Worker')),
                               value: 'worker',
                             ),
                             DropdownMenuItem(
-                              child: Text('Manager'),
+                              child: Text(I18N.text('Manager')),
                               value: 'manager',
                             ),
                             DropdownMenuItem(
-                              child: Text('Owner'),
+                              child: Text(I18N.text('Owner')),
                               value: 'owner',
                             ),
                           ],
@@ -126,7 +127,7 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
                             height: 48,
                             child: Center(
                               child: Text(
-                                'CANCEL',
+                                I18N.text('CANCEL'),
                                 style: const TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 18,
@@ -150,7 +151,7 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
                               height: 48,
                               child: Center(
                                 child: Text(
-                                  'CONFIRM',
+                                  I18N.text('CONFIRM'),
                                   style: const TextStyle(
                                     fontWeight: FontWeight.bold,
                                     color: Colors.white,

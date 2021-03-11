@@ -2,9 +2,14 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:rescape/data/company_list.dart';
+import 'package:rescape/logic/i18n/i18n.dart';
 import 'package:rescape/ui/screens/main/pages/orders/selections/new_order/company_selection/company_entry.dart';
 
 class CompanySearch extends StatefulWidget {
+  final bool popup;
+
+  CompanySearch({this.popup: false});
+
   @override
   State<StatefulWidget> createState() {
     return _CompanySearchState();
@@ -44,7 +49,7 @@ class _CompanySearchState extends State<CompanySearch> {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 prefixIcon: Icon(Icons.search),
-                hintText: 'Search for companies',
+                hintText: I18N.text('Search for companies'),
               ),
             ),
           ),
@@ -60,7 +65,7 @@ class _CompanySearchState extends State<CompanySearch> {
                     ? LocationList.companies
                     : LocationList.companies
                         .where((e) => e == searchTerm.data)))
-                  CompanyEntry(label: company),
+                  CompanyEntry(label: company, popup: widget.popup),
                 SizedBox(
                   height: 32 +
                       MediaQuery.of(context).viewInsets.bottom -

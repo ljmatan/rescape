@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:rescape/logic/i18n/i18n.dart';
 
 class ResultDialog extends StatelessWidget {
   final int statusCode;
@@ -21,8 +22,8 @@ class ResultDialog extends StatelessWidget {
               children: [
                 Text(
                   statusCode == 200
-                      ? 'Success! Tap \'OK\' to continue'
-                      : 'Error! Please try again later',
+                      ? I18N.text('Success! Tap \'OK\' to continue')
+                      : I18N.text('Error! Please try again later'),
                   style: const TextStyle(fontSize: 16),
                 ),
                 Padding(

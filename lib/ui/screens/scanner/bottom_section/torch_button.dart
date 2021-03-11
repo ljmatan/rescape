@@ -1,5 +1,6 @@
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:rescape/logic/i18n/i18n.dart';
 
 class TorchButton extends StatefulWidget {
   final Function setFlash;
@@ -25,7 +26,7 @@ class _TorchButtonState extends State<TorchButton> {
           height: 48,
           child: Center(
             child: Text(
-              'FLASHLIGHT',
+              I18N.text('FLASHLIGHT'),
               style: TextStyle(
                 color: Theme.of(context).primaryColor,
                 fontWeight: FontWeight.bold,

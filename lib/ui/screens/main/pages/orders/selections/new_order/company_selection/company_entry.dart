@@ -38,13 +38,21 @@ class LocationNumberRow extends StatelessWidget {
                 ),
               ),
             ),
-            onTap: () {
-              Navigator.of(context).push(MaterialPageRoute(
-                  builder: (BuildContext context) => CameraScreen(
-                      location: LocationList.instance.firstWhere((e) =>
-                          e.companyName == companyLocations[i].companyName &&
-                          e.number == companyLocations[i].number))));
-              OrdersViewController.change(SelectionDisplay());
+            onTap: () async {
+              final selected = await showDialog(
+                context: context,
+                barrierColor: Colors.white,
+                builder: (context) => VehicleSelection(),
+              );
+              if (selected != null) {
+                Navigator.of(context).push(MaterialPageRoute(
+                    builder: (BuildContext context) => CameraScreen(
+                        vehicle: selected,
+                        location: LocationList.instance.firstWhere((e) =>
+                            e.companyName == companyLocations[i].companyName &&
+                            e.number == companyLocations[i].number))));
+                OrdersViewController.change(SelectionDisplay());
+              }
             },
           ),
       ],
@@ -54,8 +62,9 @@ class LocationNumberRow extends StatelessWidget {
 
 class CompanyEntry extends StatefulWidget {
   final String label;
+  final bool popup;
 
-  CompanyEntry({@required this.label});
+  CompanyEntry({@required this.label, @required this.popup});
 
   @override
   State<StatefulWidget> createState() {
@@ -128,8 +137,14 @@ class _CompanyEntryState extends State<CompanyEntry> {
           ),
         ),
         onTap: () async {
-          if (_companyLocations.length > 1)
+          if (_companyLocations.length > 1) {
             setState(() => _crossFadeState = CrossFadeState.showSecond);
+            return;
+          }
+          final location = LocationList.instance
+              .firstWhere((e) => e.companyName == widget.label);
+          if (widget.popup == true)
+            Navigator.pop(context, location);
           else {
             final selected = await showDialog(
               context: context,
@@ -139,6 +154,7 @@ class _CompanyEntryState extends State<CompanyEntry> {
             if (selected != null) {
               Navigator.of(context).push(MaterialPageRoute(
                   builder: (BuildContext context) => CameraScreen(
+                      vehicle: selected,
                       location: LocationList.instance
                           .firstWhere((e) => e.companyName == widget.label))));
               OrdersViewController.change(SelectionDisplay());

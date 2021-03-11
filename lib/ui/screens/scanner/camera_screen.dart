@@ -9,13 +9,14 @@ import 'package:rescape/data/models/product_model.dart';
 import 'package:rescape/data/models/vehicle_model.dart';
 import 'package:rescape/data/new_order.dart';
 import 'package:rescape/data/product_list.dart';
-import 'package:rescape/ui/screens/scanner/bloc/last_scanned_controller.dart';
+import 'package:rescape/logic/api/products.dart';
+import 'package:rescape/logic/i18n/i18n.dart';
+import 'bloc/last_scanned_controller.dart';
 import 'current_order/current_order_button.dart';
 import 'new_order_elements/add_item_dialog.dart';
 import 'new_order_elements/current_order_button.dart';
 import 'back_button.dart';
 import 'bottom_section/bottom_section_display.dart';
-import 'camera_title.dart';
 import 'view_blocking.dart';
 import 'package:google_ml_kit/google_ml_kit.dart';
 import 'package:vibration/vibration.dart';
@@ -23,8 +24,9 @@ import 'package:vibration/vibration.dart';
 class CameraScreen extends StatefulWidget {
   final LocationModel location;
   final VehicleModel vehicle;
+  final bool update;
 
-  CameraScreen({this.location, this.vehicle});
+  CameraScreen({this.location, this.vehicle, this.update});
 
   @override
   State<StatefulWidget> createState() {
@@ -131,6 +133,7 @@ class _CameraScreenState extends State<CameraScreen>
     super.initState();
     LastScannedController.init();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (widget.update) await ProductsAPI.getList();
       _cameras = await availableCameras();
       _setController();
     });
@@ -157,7 +160,31 @@ class _CameraScreenState extends State<CameraScreen>
                 CameraPreview(_controller),
                 ViewBlocking(),
                 ExitCameraButton(),
-                CameraTitle(),
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  top: MediaQuery.of(context).padding.top + 16,
+                  child: SizedBox(
+                    width: MediaQuery.of(context).size.width,
+                    height: 44,
+                    child: Center(
+                      child: Text(
+                        widget.update
+                            ? I18N.text('Inventory Update')
+                            : widget.location != null
+                                ? I18N.text('New Order')
+                                : CurrentOrder.instance != null
+                                    ? I18N.text('Current Order')
+                                    : I18N.text('New Return'),
+                        style: TextStyle(
+                          color: Theme.of(context).primaryColor,
+                          fontWeight: FontWeight.w900,
+                          fontSize: 24,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
                 Positioned(
                   right: 16,
                   top: MediaQuery.of(context).padding.top + 16,
@@ -168,6 +195,7 @@ class _CameraScreenState extends State<CameraScreen>
                         scanning: _scanning,
                         location: widget.location,
                         vehicle: widget.vehicle,
+                        update: widget.update,
                       ),
                       if (CurrentOrder.instance != null)
                         OrderedItemsButton(

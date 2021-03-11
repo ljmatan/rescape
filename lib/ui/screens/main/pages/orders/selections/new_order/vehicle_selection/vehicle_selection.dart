@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:rescape/logic/api/vehicles.dart';
+import 'package:rescape/logic/i18n/i18n.dart';
 import 'package:rescape/ui/screens/main/pages/orders/selections/new_order/vehicle_selection/vehicle_entry.dart';
 
 class VehicleSelection extends StatelessWidget {
@@ -20,7 +21,7 @@ class VehicleSelection extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Vehicles',
+                  I18N.text('Vehicles'),
                   style: const TextStyle(
                     fontSize: 19,
                     fontWeight: FontWeight.bold,

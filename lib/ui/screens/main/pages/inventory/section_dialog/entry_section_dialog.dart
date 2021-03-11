@@ -3,6 +3,7 @@ import 'package:rescape/data/models/product_model.dart';
 import 'package:rescape/data/product_list.dart';
 import 'package:rescape/data/user_data.dart';
 import 'package:rescape/logic/api/products.dart';
+import 'package:rescape/logic/i18n/i18n.dart';
 import 'package:rescape/logic/storage/local.dart';
 import 'package:rescape/ui/screens/main/pages/inventory/section_dialog/bloc/selected_section_controller.dart';
 import 'package:rescape/ui/shared/result_dialog.dart';
@@ -26,8 +27,10 @@ class _EntrySectionDialogState extends State<EntrySectionDialog> {
     super.initState();
     SelectedSectionController.init();
     if (UserData.isOwner || UserData.isManager)
-      _availableController =
-          TextEditingController(text: widget.product.available.toString());
+      _availableController = TextEditingController(
+          text: widget.product.measureType == Measure.kg
+              ? widget.product.available.toString()
+              : widget.product.available.toStringAsFixed(0));
   }
 
   @override
@@ -58,7 +61,7 @@ class _EntrySectionDialogState extends State<EntrySectionDialog> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('Available:'),
+                      Text(I18N.text('Available') + ':'),
                       SizedBox(
                         width: MediaQuery.of(context).size.width / 3,
                         child: TextField(
@@ -75,7 +78,7 @@ class _EntrySectionDialogState extends State<EntrySectionDialog> {
                 Padding(
                   padding: const EdgeInsets.only(bottom: 16, top: 10),
                   child: Text(
-                    'Section',
+                    I18N.text('Section'),
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
@@ -164,7 +167,7 @@ class _EntrySectionDialogState extends State<EntrySectionDialog> {
                               height: 48,
                               child: Center(
                                 child: Text(
-                                  'CANCEL',
+                                  I18N.text('CANCEL'),
                                   style: const TextStyle(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 16,
@@ -187,7 +190,7 @@ class _EntrySectionDialogState extends State<EntrySectionDialog> {
                                 height: 48,
                                 child: Center(
                                   child: Text(
-                                    'UPDATE',
+                                    I18N.text('UPDATE'),
                                     style: const TextStyle(
                                       fontWeight: FontWeight.bold,
                                       color: Colors.white,
@@ -207,8 +210,8 @@ class _EntrySectionDialogState extends State<EntrySectionDialog> {
                                 Navigator.of(context);
                                 ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
-                                        content:
-                                            Text('You must enter a number')));
+                                        content: Text(I18N
+                                            .text('You must enter a number'))));
                               } else {
                                 showDialog(
                                   context: context,

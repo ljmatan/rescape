@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:rescape/data/product_list.dart';
 import 'package:rescape/logic/api/products.dart';
+import 'package:rescape/logic/i18n/i18n.dart';
 import 'package:rescape/ui/screens/main/pages/inventory/bloc/filter_controller.dart';
 import 'package:rescape/ui/screens/main/pages/inventory/filter_dialog/filter_dialog.dart';
 import 'package:rescape/ui/screens/main/pages/inventory/inventory_entry.dart';
@@ -67,6 +68,7 @@ class _InventoryPageState extends State<InventoryPage> {
                                     Center(child: CircularProgressIndicator()));
                             try {
                               await ProductsAPI.getList();
+                              setState(() {});
                             } catch (e) {
                               ScaffoldMessenger.of(context)
                                   .showSnackBar(SnackBar(content: Text('$e')));
@@ -106,7 +108,7 @@ class _InventoryPageState extends State<InventoryPage> {
                   height: 56,
                   child: Center(
                     child: Text(
-                      'STOCK',
+                      I18N.text('STOCK'),
                       style: TextStyle(
                         fontSize: 19,
                         fontWeight: FontWeight.w900,

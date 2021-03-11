@@ -29,4 +29,8 @@ abstract class OrdersAPI {
       Uri.parse(
           'https://rescape-72b1b-default-rtdb.europe-west1.firebasedatabase.app/orders/returns.json'),
       body: jsonEncode(body));
+
+  static Future getReturs() async => jsonDecode((await http.get(Uri.parse(
+          'https://rescape-72b1b-default-rtdb.europe-west1.firebasedatabase.app/orders/returns.json')))
+      .body);
 }

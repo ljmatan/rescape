@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:rescape/data/models/product_model.dart';
-import 'package:rescape/data/product_list.dart';
 import 'package:rescape/logic/api/products.dart';
+import 'package:rescape/logic/i18n/i18n.dart';
+import 'package:rescape/ui/screens/add_product/barcode_scanning.dart';
 import 'package:rescape/ui/shared/result_dialog.dart';
 
 class AddProductScreen extends StatefulWidget {
@@ -48,7 +49,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
                 Padding(
                   padding: const EdgeInsets.only(bottom: 18),
                   child: Text(
-                    'New Product',
+                    I18N.text('New Product'),
                     style: const TextStyle(
                       fontSize: 21,
                       fontWeight: FontWeight.bold,
@@ -67,7 +68,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
                             keyboardType: TextInputType.number,
                             decoration: InputDecoration(
                               border: OutlineInputBorder(),
-                              labelText: 'Internal Code',
+                              labelText: I18N.text('Internal Code'),
                             ),
                           ),
                         ),
@@ -81,7 +82,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
                             keyboardType: TextInputType.number,
                             decoration: InputDecoration(
                               border: OutlineInputBorder(),
-                              labelText: 'Amount',
+                              labelText: I18N.text('Amount'),
                             ),
                           ),
                         ),
@@ -91,13 +92,35 @@ class _AddProductScreenState extends State<AddProductScreen> {
                 ),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
-                  child: TextField(
-                    controller: _barcodeController,
-                    keyboardType: TextInputType.number,
-                    decoration: InputDecoration(
-                      border: OutlineInputBorder(),
-                      labelText: 'Barcode',
-                    ),
+                  child: Stack(
+                    children: [
+                      TextField(
+                        controller: _barcodeController,
+                        keyboardType: TextInputType.number,
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(),
+                          labelText: I18N.text('Barcode'),
+                          contentPadding:
+                              const EdgeInsets.fromLTRB(12, 24, 48, 16),
+                        ),
+                      ),
+                      Positioned(
+                        right: 0,
+                        top: 0,
+                        bottom: 0,
+                        child: IconButton(
+                          icon: Icon(Icons.camera),
+                          onPressed: () async {
+                            final barcode = await Navigator.of(context).push(
+                                MaterialPageRoute(
+                                    builder: (BuildContext context) =>
+                                        AddProductBarcodeScan()));
+                            if (barcode != null)
+                              _barcodeController.text = barcode;
+                          },
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 Padding(
@@ -106,7 +129,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
                     controller: _nameController,
                     decoration: InputDecoration(
                       border: OutlineInputBorder(),
-                      labelText: 'Name',
+                      labelText: I18N.text('Name'),
                     ),
                   ),
                 ),
@@ -116,7 +139,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
                     controller: _categoryController,
                     decoration: InputDecoration(
                       border: OutlineInputBorder(),
-                      labelText: 'Category',
+                      labelText: I18N.text('Category'),
                     ),
                   ),
                 ),
@@ -131,11 +154,11 @@ class _AddProductScreenState extends State<AddProductScreen> {
                           value: _measureType,
                           items: [
                             DropdownMenuItem(
-                              child: Text('Weight'),
+                              child: Text(I18N.text('Weight')),
                               value: Measure.kg,
                             ),
                             DropdownMenuItem(
-                              child: Text('Quantity'),
+                              child: Text(I18N.text('Quantity')),
                               value: Measure.qty,
                             ),
                           ],
@@ -158,7 +181,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
                           keyboardType: TextInputType.number,
                           decoration: InputDecoration(
                             border: OutlineInputBorder(),
-                            labelText: 'Quantity',
+                            labelText: I18N.text('Quantity'),
                           ),
                         ),
                       ),
@@ -167,7 +190,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
                 ),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
-                  child: Text('Section'),
+                  child: Text(I18N.text('Section')),
                 ),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -220,7 +243,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
                             height: 48,
                             child: Center(
                               child: Text(
-                                'CANCEL',
+                                I18N.text('CANCEL'),
                                 style: const TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 18,
@@ -244,7 +267,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
                               height: 48,
                               child: Center(
                                 child: Text(
-                                  'CONFIRM',
+                                  I18N.text('CONFIRM'),
                                   style: const TextStyle(
                                     fontWeight: FontWeight.bold,
                                     color: Colors.white,
@@ -259,11 +282,17 @@ class _AddProductScreenState extends State<AddProductScreen> {
                                 int.tryParse(_internalCodeController.text) !=
                                     null &&
                                 _amountController.text.isNotEmpty &&
-                                double.tryParse(_amountController.text) !=
-                                    null &&
+                                (_measureType == Measure.kg &&
+                                        double.tryParse(
+                                                _amountController.text) !=
+                                            null ||
+                                    _measureType == Measure.qty &&
+                                        int.tryParse(_amountController.text) !=
+                                            null) &&
                                 _barcodeController.text.isNotEmpty &&
                                 int.tryParse(_barcodeController.text) != null &&
-                                _barcodeController.text.length == 13 &&
+                                (_barcodeController.text.length == 13 ||
+                                    _barcodeController.text.length == 7) &&
                                 _nameController.text.isNotEmpty &&
                                 _categoryController.text.isNotEmpty &&
                                 (_measureType == Measure.kg
@@ -284,7 +313,9 @@ class _AddProductScreenState extends State<AddProductScreen> {
                               try {
                                 statusCode = (await ProductsAPI.create(
                                   double.parse(_amountController.text),
-                                  int.parse(_barcodeController.text),
+                                  int.parse(_measureType == Measure.kg
+                                      ? _barcodeController.text.substring(0, 7)
+                                      : _barcodeController.text),
                                   _categoryController.text,
                                   _measure,
                                   _nameController.text,
@@ -308,7 +339,8 @@ class _AddProductScreenState extends State<AddProductScreen> {
                             } else
                               ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
-                                      content: Text('Please check your info')));
+                                      content: Text(I18N
+                                          .text('Please check your info'))));
                           },
                         ),
                       ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:rescape/data/models/product_model.dart';
+import 'package:rescape/logic/i18n/i18n.dart';
 import 'package:rescape/ui/screens/scanner/bloc/last_scanned_controller.dart';
 import 'package:rescape/ui/screens/scanner/bottom_section/torch_button.dart';
 import 'enter_manually_button.dart';
@@ -44,7 +45,7 @@ class BottomSection extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  'Scan code\nto add item and weight',
+                  I18N.text('Scan code\nto add item and weight'),
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: Theme.of(context).backgroundColor,

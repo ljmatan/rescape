@@ -4,21 +4,28 @@ import 'package:rescape/data/models/company_model.dart';
 import 'package:rescape/data/models/product_model.dart';
 import 'package:rescape/data/models/vehicle_model.dart';
 import 'package:rescape/data/new_order.dart';
+import 'package:rescape/data/product_list.dart';
 import 'package:rescape/data/user_data.dart';
 import 'package:rescape/logic/api/orders.dart';
-import 'package:rescape/ui/screens/scanner/items_list_dialog/success_dialog.dart';
+import 'package:rescape/logic/api/products.dart';
+import 'package:rescape/logic/i18n/i18n.dart';
+import 'package:rescape/logic/storage/local.dart';
+import 'package:rescape/ui/screens/main/pages/orders/selections/new_order/company_selection/company_search.dart';
+import 'package:rescape/ui/shared/result_dialog.dart';
 
 class ItemsListDialog extends StatefulWidget {
   final String label;
   final Function scanning;
   final LocationModel location;
   final VehicleModel vehicle;
+  final bool update;
 
   ItemsListDialog({
     @required this.label,
     @required this.scanning,
     @required this.location,
     @required this.vehicle,
+    @required this.update,
   });
 
   @override
@@ -44,7 +51,7 @@ class _ItemsListDialogState extends State<ItemsListDialog> {
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Text(
-                  'No items added',
+                  I18N.text('No items added'),
                   textAlign: TextAlign.center,
                   style: const TextStyle(fontSize: 16),
                 ),
@@ -60,11 +67,13 @@ class _ItemsListDialogState extends State<ItemsListDialog> {
                   ),
                   child: Center(
                     child: Text(
-                      widget.location != null
-                          ? 'New Order'
-                          : CurrentOrder.instance != null
-                              ? 'Current Order'
-                              : 'New Return',
+                      widget.update != null && widget.update
+                          ? I18N.text('Inventory Update')
+                          : widget.location != null
+                              ? I18N.text('New Order')
+                              : CurrentOrder.instance != null
+                                  ? I18N.text('Current Order')
+                                  : I18N.text('New Return'),
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 19,
@@ -139,7 +148,7 @@ class _ItemsListDialogState extends State<ItemsListDialog> {
                       height: 48,
                       child: Center(
                         child: Text(
-                          'BACK',
+                          I18N.text('BACK'),
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             color: Theme.of(context).primaryColor,
@@ -164,7 +173,7 @@ class _ItemsListDialogState extends State<ItemsListDialog> {
                         height: 48,
                         child: Center(
                           child: Text(
-                            'CONFIRM',
+                            I18N.text('CONFIRM'),
                             style: const TextStyle(
                               fontWeight: FontWeight.bold,
                               color: Colors.white,
@@ -176,7 +185,7 @@ class _ItemsListDialogState extends State<ItemsListDialog> {
                     onTap: () async {
                       if (NewOrder.instance.isEmpty)
                         _back();
-                      else if (widget.location != null) {
+                      else if (widget.update) {
                         showDialog(
                             context: context,
                             barrierDismissible: false,
@@ -186,7 +195,65 @@ class _ItemsListDialogState extends State<ItemsListDialog> {
                                   child: CircularProgressIndicator(),
                                 ),
                                 onWillPop: () async => false));
-                        await OrdersAPI.create(
+                        final Map productsMap = {
+                          for (var item in NewOrder.instance)
+                            item.product.id: {
+                              'available': ProductList.instance
+                                      .firstWhere(
+                                          (e) => e.id == item.product.id)
+                                      .available +
+                                  item.measure,
+                              'name': item.product.name,
+                              'barcode': item.product.measureType == Measure.kg
+                                  ? item.product.barcode.substring(0, 7)
+                                  : item.product.barcode,
+                              'measure': item.product.measureType == Measure.kg
+                                  ? 'KG'
+                                  : 'QTY' + item.product.quantity.toString(),
+                              'section': item.product.section,
+                              'category': item.product.category,
+                            }
+                        };
+                        for (var item in NewOrder.instance) {
+                          ProductList.instance
+                              .firstWhere((e) => e.id == item.product.id)
+                              .available += item.measure;
+                          await DB.instance.update(
+                            'Products',
+                            {
+                              'available': ProductList.instance
+                                      .firstWhere(
+                                          (e) => e.id == item.product.id)
+                                      .available +
+                                  item.measure
+                            },
+                            where: 'product_id = ?',
+                            whereArgs: [item.product.id],
+                          );
+                        }
+                        final response =
+                            await ProductsAPI.massProductAvailabilityUpdate(
+                                productsMap);
+                        Navigator.pop(context);
+                        await showDialog(
+                          context: context,
+                          barrierDismissible: false,
+                          barrierColor: Colors.white70,
+                          builder: (context) =>
+                              ResultDialog(statusCode: response.statusCode),
+                        );
+                        Navigator.pop(context);
+                      } else if (widget.location != null) {
+                        showDialog(
+                            context: context,
+                            barrierDismissible: false,
+                            barrierColor: Colors.white70,
+                            builder: (context) => WillPopScope(
+                                child: Center(
+                                  child: CircularProgressIndicator(),
+                                ),
+                                onWillPop: () async => false));
+                        final response = await OrdersAPI.create(
                           {
                             'location': widget.location.id,
                             'time': DateTime.now().toIso8601String(),
@@ -204,13 +271,14 @@ class _ItemsListDialogState extends State<ItemsListDialog> {
                           },
                         );
                         Navigator.pop(context);
-                        showDialog(
+                        await showDialog(
                           context: context,
                           barrierDismissible: false,
                           barrierColor: Colors.white70,
                           builder: (context) =>
-                              SuccessDialog(label: 'Order added!'),
+                              ResultDialog(statusCode: response.statusCode),
                         );
+                        Navigator.pop(context);
                       } else if (CurrentOrder.instance != null) {
                         showDialog(
                             context: context,
@@ -221,7 +289,7 @@ class _ItemsListDialogState extends State<ItemsListDialog> {
                                   child: CircularProgressIndicator(),
                                 ),
                                 onWillPop: () async => false));
-                        await OrdersAPI.orderPrepared(
+                        final response = await OrdersAPI.orderPrepared(
                           {
                             'location': CurrentOrder.instance.location.id,
                             'time':
@@ -241,45 +309,59 @@ class _ItemsListDialogState extends State<ItemsListDialog> {
                           CurrentOrder.instance.key,
                         );
                         Navigator.pop(context);
-                        showDialog(
+                        await showDialog(
                           context: context,
                           barrierDismissible: false,
                           barrierColor: Colors.white70,
-                          builder: (context) => SuccessDialog(
-                              label: 'Order successfully prepared!'),
+                          builder: (context) => ResultDialog(
+                            statusCode: response.statusCode,
+                          ),
                         );
+                        Navigator.pop(context);
                       } else {
-                        showDialog(
+                        final location = await showDialog(
+                          context: context,
+                          barrierColor: Colors.white,
+                          builder: (context) => Material(
+                            color: Colors.white,
+                            child: CompanySearch(popup: true),
+                          ),
+                        );
+                        if (location != null) {
+                          showDialog(
+                              context: context,
+                              barrierDismissible: false,
+                              barrierColor: Colors.white70,
+                              builder: (context) => WillPopScope(
+                                  child: Center(
+                                    child: CircularProgressIndicator(),
+                                  ),
+                                  onWillPop: () async => false));
+                          final response = await OrdersAPI.createReturn(
+                            {
+                              'time': DateTime.now().toIso8601String(),
+                              'items': [
+                                for (var item in NewOrder.instance)
+                                  {
+                                    'id': item.product.id,
+                                    'amount': item.measure,
+                                  },
+                              ],
+                              'submitter': UserData.instance.name,
+                              'location': location.id,
+                            },
+                          );
+                          Navigator.pop(context);
+                          await showDialog(
                             context: context,
                             barrierDismissible: false,
                             barrierColor: Colors.white70,
-                            builder: (context) => WillPopScope(
-                                child: Center(
-                                  child: CircularProgressIndicator(),
-                                ),
-                                onWillPop: () async => false));
-                        await OrdersAPI.createReturn(
-                          {
-                            'time':
-                                CurrentOrder.instance.time.toIso8601String(),
-                            'items': [
-                              for (var item in NewOrder.instance)
-                                {
-                                  'id': item.product.id,
-                                  'amount': item.measure,
-                                },
-                            ],
-                            'submitter': UserData.instance.name,
-                          },
-                        );
-                        Navigator.pop(context);
-                        showDialog(
-                          context: context,
-                          barrierDismissible: false,
-                          barrierColor: Colors.white70,
-                          builder: (context) =>
-                              SuccessDialog(label: 'Return info forwarded'),
-                        );
+                            builder: (context) => ResultDialog(
+                              statusCode: response.statusCode,
+                            ),
+                          );
+                          Navigator.pop(context);
+                        }
                       }
                     },
                   ),

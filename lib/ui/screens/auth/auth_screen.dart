@@ -6,6 +6,7 @@ import 'package:rescape/data/user_data.dart';
 import 'package:rescape/logic/api/organisation.dart';
 import 'package:rescape/logic/cache/prefs.dart';
 import 'package:pinput/pin_put/pin_put.dart';
+import 'package:rescape/logic/i18n/i18n.dart';
 
 class AuthScreen extends StatefulWidget {
   final Function authenticated;
@@ -27,14 +28,16 @@ class _AuthScreenState extends State<AuthScreen> {
     borderRadius: BorderRadius.circular(4),
   );
 
+  int _selected = 0;
+
   Future<void> _login() async {
     if (_usernameController.text.isEmpty ||
         _usernameController.text.length < 6 ||
         _pinController.text.isEmpty ||
         int.tryParse(_pinController.text) == null) {
       Navigator.of(context);
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Please check your input')));
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(I18N.text('Please check your info'))));
     } else {
       showDialog(
         context: context,
@@ -50,11 +53,15 @@ class _AuthScreenState extends State<AuthScreen> {
             await OrganisationAPI.login(_usernameController.text.toLowerCase());
         if (response.statusCode == 200) {
           final profile = jsonDecode(response.body);
-          if (profile['pin'].toString() != _pinController.text ||
-              profile == null) {
-            ScaffoldMessenger.of(context)
-                .showSnackBar(SnackBar(content: Text('Wrong details')));
-          } else {
+          if (profile == null ||
+              profile['pin'].toString() != _pinController.text) {
+            ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(I18N.text('Wrong details'))));
+          } else if (profile['type'] != 'owner' && _selected == 0)
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                content:
+                    Text(I18N.text('Please select manager registration'))));
+          else {
             UserData.setInstance(UserModel(profile['name'], profile['type']));
             await Prefs.instance.setBool('authenticated', true);
             await Prefs.instance.setString('name', profile['name']);
@@ -70,8 +77,6 @@ class _AuthScreenState extends State<AuthScreen> {
       }
     }
   }
-
-  int _selected = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -164,7 +169,7 @@ class _AuthScreenState extends State<AuthScreen> {
                               Padding(
                                 padding: const EdgeInsets.only(bottom: 6),
                                 child: Text(
-                                  'Username',
+                                  I18N.text('Username'),
                                   style: const TextStyle(
                                     fontWeight: FontWeight.bold,
                                   ),
@@ -197,7 +202,7 @@ class _AuthScreenState extends State<AuthScreen> {
                               Padding(
                                 padding: const EdgeInsets.only(bottom: 6),
                                 child: Text(
-                                  'Passcode',
+                                  I18N.text('Passcode'),
                                   style: const TextStyle(
                                     fontWeight: FontWeight.bold,
                                   ),
@@ -229,7 +234,7 @@ class _AuthScreenState extends State<AuthScreen> {
                                 height: 48,
                                 child: Center(
                                   child: Text(
-                                    'Verify',
+                                    I18N.text('Verify'),
                                     style: const TextStyle(
                                       fontWeight: FontWeight.bold,
                                       color: Colors.white,

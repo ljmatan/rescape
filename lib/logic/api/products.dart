@@ -49,4 +49,11 @@ abstract class ProductsAPI {
             'https://rescape-72b1b-default-rtdb.europe-west1.firebasedatabase.app/products/$id.json'),
         body: jsonEncode({'available': available}),
       );
+
+  static Future<http.Response> massProductAvailabilityUpdate(Map body) async =>
+      await http.patch(
+        Uri.parse(
+            'https://rescape-72b1b-default-rtdb.europe-west1.firebasedatabase.app/products.json'),
+        body: jsonEncode(body),
+      );
 }

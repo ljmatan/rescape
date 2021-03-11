@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:rescape/data/user_data.dart';
+import 'package:rescape/logic/i18n/i18n.dart';
 import 'package:rescape/ui/screens/main/pages/reports/damages/damages_screen.dart';
+import 'package:rescape/ui/screens/main/pages/reports/returns/returns_screen.dart';
 import 'package:rescape/ui/screens/scanner/camera_screen.dart';
 import 'damage_report/damage_report_screen.dart';
 
@@ -35,7 +37,7 @@ class _ReportsPageState extends State<ReportsPage> {
                     children: [
                       Icon(Icons.dangerous, size: 64),
                       Text(
-                        'Damage' + (UserData.isOwner ? 's' : ''),
+                        I18N.text('Damage') + (UserData.isOwner ? 's' : ''),
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
                         ),
@@ -63,7 +65,7 @@ class _ReportsPageState extends State<ReportsPage> {
                     children: [
                       Icon(Icons.post_add, size: 64),
                       Text(
-                        'Return' + (UserData.isOwner ? 's' : ''),
+                        I18N.text('Return') + (UserData.isOwner ? 's' : ''),
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
                         ),
@@ -73,9 +75,8 @@ class _ReportsPageState extends State<ReportsPage> {
                 ),
               ),
               onTap: () => Navigator.of(context).push(MaterialPageRoute(
-                  builder: (BuildContext context) => UserData.isOwner
-                      ? CameraScreen()
-                      : DamageReportScreen())),
+                  builder: (BuildContext context) =>
+                      UserData.isOwner ? ReturnsScreen() : CameraScreen())),
             ),
           ),
         ],

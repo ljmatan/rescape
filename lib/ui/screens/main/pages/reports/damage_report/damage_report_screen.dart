@@ -4,6 +4,7 @@ import 'dart:io' as io;
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:rescape/logic/api/reports.dart';
+import 'package:rescape/logic/i18n/i18n.dart';
 import 'package:rescape/ui/shared/result_dialog.dart';
 
 class DamageReportScreen extends StatefulWidget {
@@ -25,7 +26,7 @@ class _DamageReportScreenState extends State<DamageReportScreen> {
         automaticallyImplyLeading: false,
         titleSpacing: 12,
         title: Text(
-          'Damage report',
+          I18N.text('Damage report'),
           style: const TextStyle(color: Colors.black),
         ),
         backgroundColor: Colors.white,
@@ -74,7 +75,7 @@ class _DamageReportScreenState extends State<DamageReportScreen> {
                     filled: true,
                     fillColor: Colors.white,
                     border: OutlineInputBorder(),
-                    hintText: 'Enter a message',
+                    hintText: I18N.text('Enter a message'),
                   ),
                 ),
                 Padding(
@@ -89,7 +90,7 @@ class _DamageReportScreenState extends State<DamageReportScreen> {
                             height: 48,
                             child: Center(
                               child: Text(
-                                'CANCEL',
+                                I18N.text('CANCEL'),
                                 style: const TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 16,
@@ -112,7 +113,7 @@ class _DamageReportScreenState extends State<DamageReportScreen> {
                               height: 48,
                               child: Center(
                                 child: Text(
-                                  'SUBMIT',
+                                  I18N.text('SUBMIT'),
                                   style: const TextStyle(
                                     fontWeight: FontWeight.bold,
                                     color: Colors.white,

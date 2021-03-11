@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:rescape/data/product_list.dart';
+import 'package:rescape/logic/i18n/i18n.dart';
 import 'product_entry.dart';
 
 class ManualEntryDialogDialog extends StatefulWidget {
@@ -38,7 +39,7 @@ class _ManualEntryDialogDialogState extends State<ManualEntryDialogDialog> {
                 decoration: InputDecoration(
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.search),
-                  hintText: 'Search for products',
+                  hintText: I18N.text('Search for products'),
                 ),
               ),
             ),

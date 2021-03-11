@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:rescape/data/user_data.dart';
+import 'package:rescape/logic/i18n/i18n.dart';
 import 'package:rescape/ui/screens/main/pages/orders/bloc/view_controller.dart';
 import 'package:rescape/ui/screens/main/pages/orders/selections/current_orders/current_orders.dart';
 import 'package:rescape/ui/screens/main/pages/orders/selections/new_order/company_selection/company_search.dart';
@@ -70,19 +71,19 @@ class SelectionDisplay extends StatelessWidget {
         children: [
           if (UserData.isOwner)
             SelectionOption(
-              label: 'Previous Orders',
+              label: I18N.text('Previous Orders'),
               icon: Icons.history,
               route: PreviousOrders(),
             ),
           if (UserData.isOwner) const SizedBox(height: 12),
           SelectionOption(
-            label: 'Create an Order',
+            label: I18N.text('Create an Order'),
             icon: Icons.add_circle_outline,
             route: CompanySearch(),
           ),
           const SizedBox(height: 12),
           SelectionOption(
-            label: 'Current Orders',
+            label: I18N.text('Current Orders'),
             icon: Icons.assignment,
             route: CurrentOrders(),
           ),

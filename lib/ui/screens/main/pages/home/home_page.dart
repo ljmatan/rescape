@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:rescape/data/product_list.dart';
+import 'package:rescape/logic/i18n/i18n.dart';
 import 'package:rescape/ui/screens/main/pages/home/blueprint/bloc/highlighted_area_controller.dart';
 import '../../bloc/main_view_controller.dart';
 import 'blueprint/blueprint_display.dart';
@@ -46,7 +47,6 @@ class _HomePageState extends State<HomePage> {
     }) {
       assert(details != null);
       assert(details.exception != null);
-      // ---
 
       bool ifIsOverflowError = false;
 
@@ -106,10 +106,14 @@ class _HomePageState extends State<HomePage> {
                           decoration: InputDecoration(
                             prefixIcon: Icon(Icons.search),
                             border: OutlineInputBorder(),
-                            hintText: 'Tap to search',
+                            hintText: I18N.text('Tap to search'),
                             contentPadding:
                                 const EdgeInsets.fromLTRB(0, 10, 16, 10),
                           ),
+                          onTap: () {
+                            if (_itemSearchController.text.isNotEmpty)
+                              _itemSearchController.text = '';
+                          },
                         ),
                       ),
                     ),

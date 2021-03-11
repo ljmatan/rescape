@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:rescape/data/user_data.dart';
+import 'package:rescape/logic/i18n/i18n.dart';
 import 'add/add_button.dart';
 import 'custom_icon.dart';
 
@@ -36,29 +38,29 @@ class BottomNavBar extends StatelessWidget {
                     children: [
                       CustomNavBarIcon(
                         icon: Icons.explore,
-                        label: 'NAVIGATE',
+                        label: I18N.text('NAVIGATE'),
                         index: 0,
                       ),
                       CustomNavBarIcon(
                         icon: Icons.store,
-                        label: 'INVENTORY',
+                        label: I18N.text('INVENTORY'),
                         index: 1,
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(width: 74, height: 56),
+                if (UserData.isOwner) const SizedBox(width: 74, height: 56),
                 Expanded(
                   child: Row(
                     children: [
                       CustomNavBarIcon(
                         icon: Icons.local_shipping,
-                        label: 'ORDERS',
+                        label: I18N.text('ORDERS'),
                         index: 2,
                       ),
                       CustomNavBarIcon(
                         icon: Icons.notifications,
-                        label: 'REPORTS',
+                        label: I18N.text('REPORTS'),
                         index: 3,
                       ),
                     ],
@@ -68,7 +70,7 @@ class BottomNavBar extends StatelessWidget {
             ),
           ),
         ),
-        AddButton(),
+        if (UserData.isOwner) AddButton(),
       ],
     );
   }

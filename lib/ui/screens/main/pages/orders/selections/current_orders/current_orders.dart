@@ -5,6 +5,7 @@ import 'package:rescape/data/models/order_item_model.dart';
 import 'package:rescape/data/models/vehicle_model.dart';
 import 'package:rescape/data/product_list.dart';
 import 'package:rescape/logic/api/orders.dart';
+import 'package:rescape/logic/i18n/i18n.dart';
 import 'package:rescape/ui/screens/main/pages/orders/bloc/view_controller.dart';
 import 'package:rescape/ui/screens/main/pages/orders/selection_display.dart';
 import 'package:rescape/ui/screens/main/pages/orders/selections/current_orders/order_list.dart';
@@ -25,7 +26,9 @@ class CurrentOrders extends StatelessWidget {
                   : Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: Text(
-                        orders.hasError ? orders.error.toString() : 'No orders',
+                        orders.hasError
+                            ? orders.error.toString()
+                            : I18N.text('No orders'),
                       ),
                     ),
             );
@@ -91,7 +94,7 @@ class CurrentOrders extends StatelessWidget {
                         ),
                       ),
                       onTap: () => OrdersViewController.change(
-                        OrderList(order),
+                        OrderList(order: order),
                       ),
                     ),
                   ),

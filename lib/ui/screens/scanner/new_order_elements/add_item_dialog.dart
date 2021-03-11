@@ -3,6 +3,7 @@ import 'package:rescape/data/models/order_item_model.dart';
 import 'package:rescape/data/models/product_model.dart';
 import 'package:rescape/data/new_order.dart';
 import 'package:rescape/logic/barcode/processing.dart';
+import 'package:rescape/logic/i18n/i18n.dart';
 
 class AddItemDialog extends StatefulWidget {
   final ProductModel product;
@@ -50,7 +51,7 @@ class _AddItemDialogState extends State<AddItemDialog> {
         _quantity != null && _quantity.runtimeType != double ||
         _weight != null && _weight.runtimeType != double)
       ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Molimo unesite ispravnu količinu')));
+          SnackBar(content: Text(I18N.text('Please check your info'))));
     else {
       NewOrder.add(
         OrderItemModel(
@@ -81,9 +82,7 @@ class _AddItemDialogState extends State<AddItemDialog> {
                 children: [
                   Text(
                     widget.product.name +
-                        (_measureInQty
-                            ? ' ${widget.product.quantity} kom'
-                            : ''),
+                        (_measureInQty ? ' x${widget.product.quantity}' : ''),
                     textAlign: TextAlign.center,
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
@@ -95,13 +94,15 @@ class _AddItemDialogState extends State<AddItemDialog> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(_measureInQty ? 'Komada:' : 'Kila:'),
+                        Text(_measureInQty
+                            ? I18N.text('Pieces') + ':'
+                            : I18N.text('Kgs') + ':'),
                         SizedBox(
                           width: 150,
                           height: 56,
                           child: TextField(
                             autofocus: widget.autofocus,
-                            maxLength: _measureInQty ? 1 : 6,
+                            maxLength: _measureInQty ? 3 : 7,
                             controller: _qtyController ?? _weightController,
                             textAlign: TextAlign.center,
                             keyboardType: TextInputType.number,
