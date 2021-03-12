@@ -1,7 +1,8 @@
 enum Measure { qty, kg }
 
 class ProductModel {
-  String id, name, barcode, category;
+  int id;
+  String name, barcode, category;
   Measure measureType;
   int quantity;
   double available;

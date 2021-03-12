@@ -7,6 +7,7 @@ import 'package:rescape/logic/api/organisation.dart';
 import 'package:rescape/logic/cache/prefs.dart';
 import 'package:pinput/pin_put/pin_put.dart';
 import 'package:rescape/logic/i18n/i18n.dart';
+import 'package:rescape/logic/i18n/locale_controller.dart';
 
 class AuthScreen extends StatefulWidget {
   final Function authenticated;
@@ -245,6 +246,42 @@ class _AuthScreenState extends State<AuthScreen> {
                               ),
                             ),
                             onTap: () async => await _login(),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 16),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              TextButton(
+                                child: Text(
+                                  'English',
+                                  style: TextStyle(
+                                    fontWeight: I18N.locale == 'en'
+                                        ? FontWeight.bold
+                                        : null,
+                                    color: I18N.locale == 'en'
+                                        ? Colors.black
+                                        : Colors.grey,
+                                  ),
+                                ),
+                                onPressed: () => LocaleController.change('en'),
+                              ),
+                              TextButton(
+                                child: Text(
+                                  'Srpski',
+                                  style: TextStyle(
+                                    fontWeight: I18N.locale == 'sr'
+                                        ? FontWeight.bold
+                                        : null,
+                                    color: I18N.locale == 'sr'
+                                        ? Colors.black
+                                        : Colors.grey,
+                                  ),
+                                ),
+                                onPressed: () => LocaleController.change('sr'),
+                              ),
+                            ],
                           ),
                         ),
                       ],

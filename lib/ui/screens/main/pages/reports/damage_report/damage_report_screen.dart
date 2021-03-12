@@ -91,7 +91,8 @@ class _DamageReportScreenState extends State<DamageReportScreen> {
                             child: Center(
                               child: Text(
                                 I18N.text('CANCEL'),
-                                style: const TextStyle(
+                                style: TextStyle(
+                                  color: Theme.of(context).primaryColor,
                                   fontWeight: FontWeight.bold,
                                   fontSize: 16,
                                 ),

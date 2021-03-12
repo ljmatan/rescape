@@ -57,7 +57,7 @@ class OrderList extends StatelessWidget {
                         children: [
                           Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 12),
-                            child: Text(item.product.id),
+                            child: Text(item.product.id.toString()),
                           ),
                           Flexible(
                             child: Align(

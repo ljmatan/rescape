@@ -162,6 +162,7 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
                             ),
                           ),
                           onTap: () async {
+                            FocusScope.of(context).unfocus();
                             if (_firstNameController.text.isNotEmpty &&
                                 _lastNameController.text.isNotEmpty) {
                               showDialog(
@@ -206,8 +207,8 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
                               );
                             } else
                               ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                                  content: Text(
-                                      'Please enter all of the required info')));
+                                  content: Text(I18N.text(
+                                      'Please enter all of the required info'))));
                           },
                         ),
                       ),

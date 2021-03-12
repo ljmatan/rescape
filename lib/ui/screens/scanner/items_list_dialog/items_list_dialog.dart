@@ -197,10 +197,11 @@ class _ItemsListDialogState extends State<ItemsListDialog> {
                                 onWillPop: () async => false));
                         final Map productsMap = {
                           for (var item in NewOrder.instance)
-                            item.product.id: {
+                            item.product.barcode: {
+                              'product_id': item.product.id,
                               'available': ProductList.instance
-                                      .firstWhere(
-                                          (e) => e.id == item.product.id)
+                                      .firstWhere((e) =>
+                                          e.barcode == item.product.barcode)
                                       .available +
                                   item.measure,
                               'name': item.product.name,
@@ -216,19 +217,20 @@ class _ItemsListDialogState extends State<ItemsListDialog> {
                         };
                         for (var item in NewOrder.instance) {
                           ProductList.instance
-                              .firstWhere((e) => e.id == item.product.id)
+                              .firstWhere(
+                                  (e) => e.barcode == item.product.barcode)
                               .available += item.measure;
                           await DB.instance.update(
                             'Products',
                             {
                               'available': ProductList.instance
-                                      .firstWhere(
-                                          (e) => e.id == item.product.id)
+                                      .firstWhere((e) =>
+                                          e.barcode == item.product.barcode)
                                       .available +
                                   item.measure
                             },
-                            where: 'product_id = ?',
-                            whereArgs: [item.product.id],
+                            where: 'barcode = ?',
+                            whereArgs: [item.product.barcode],
                           );
                         }
                         final response =
@@ -260,7 +262,7 @@ class _ItemsListDialogState extends State<ItemsListDialog> {
                             'items': [
                               for (var item in NewOrder.instance)
                                 {
-                                  'id': item.product.id,
+                                  'barcode': item.product.barcode,
                                   'amount': item.measure,
                                 },
                             ],
@@ -280,44 +282,56 @@ class _ItemsListDialogState extends State<ItemsListDialog> {
                         );
                         Navigator.pop(context);
                       } else if (CurrentOrder.instance != null) {
-                        showDialog(
+                        final DateTime date = await showDatePicker(
+                          context: context,
+                          initialDate: DateTime.now(),
+                          firstDate: DateTime.now(),
+                          lastDate:
+                              DateTime.now().add(const Duration(days: 365)),
+                          locale: Locale.fromSubtags(
+                            languageCode: I18N.locale,
+                            scriptCode: I18N.locale == 'sr' ? 'Latn' : null,
+                          ),
+                        );
+                        if (date != null) {
+                          showDialog(
+                              context: context,
+                              barrierDismissible: false,
+                              barrierColor: Colors.white70,
+                              builder: (context) => WillPopScope(
+                                  child: Center(
+                                    child: CircularProgressIndicator(),
+                                  ),
+                                  onWillPop: () async => false));
+                          final response = await OrdersAPI.orderPrepared(
+                            {
+                              'location': CurrentOrder.instance.location.id,
+                              'time': date.toIso8601String(),
+                              'items': [
+                                for (var item in NewOrder.instance)
+                                  {
+                                    'barcode': item.product.barcode,
+                                    'amount': item.measure,
+                                  },
+                              ],
+                              'vehicle': {
+                                'model': CurrentOrder.instance.vehicle.model,
+                                'plates': CurrentOrder.instance.vehicle.plates,
+                              },
+                            },
+                            CurrentOrder.instance.key,
+                          );
+                          Navigator.pop(context);
+                          await showDialog(
                             context: context,
                             barrierDismissible: false,
                             barrierColor: Colors.white70,
-                            builder: (context) => WillPopScope(
-                                child: Center(
-                                  child: CircularProgressIndicator(),
-                                ),
-                                onWillPop: () async => false));
-                        final response = await OrdersAPI.orderPrepared(
-                          {
-                            'location': CurrentOrder.instance.location.id,
-                            'time':
-                                CurrentOrder.instance.time.toIso8601String(),
-                            'items': [
-                              for (var item in NewOrder.instance)
-                                {
-                                  'id': item.product.id,
-                                  'amount': item.measure,
-                                },
-                            ],
-                            'vehicle': {
-                              'model': CurrentOrder.instance.vehicle.model,
-                              'plates': CurrentOrder.instance.vehicle.plates,
-                            },
-                          },
-                          CurrentOrder.instance.key,
-                        );
-                        Navigator.pop(context);
-                        await showDialog(
-                          context: context,
-                          barrierDismissible: false,
-                          barrierColor: Colors.white70,
-                          builder: (context) => ResultDialog(
-                            statusCode: response.statusCode,
-                          ),
-                        );
-                        Navigator.pop(context);
+                            builder: (context) => ResultDialog(
+                              statusCode: response,
+                            ),
+                          );
+                          Navigator.pop(context);
+                        }
                       } else {
                         final location = await showDialog(
                           context: context,
@@ -343,7 +357,7 @@ class _ItemsListDialogState extends State<ItemsListDialog> {
                               'items': [
                                 for (var item in NewOrder.instance)
                                   {
-                                    'id': item.product.id,
+                                    'barcode': item.product.barcode,
                                     'amount': item.measure,
                                   },
                               ],

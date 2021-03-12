@@ -16,9 +16,9 @@ abstract class ProductList {
         await DB.instance.insert(
           'Products',
           {
-            'product_id': product.key,
+            'product_id': product.value['product_id'],
             'name': product.value['name'],
-            'barcode': product.value['barcode'],
+            'barcode': product.key,
             'measure': product.value['measure'],
             'available': (product.value['available'] ?? 0.0).runtimeType == int
                 ? product.value['available'].toDouble()
@@ -29,9 +29,9 @@ abstract class ProductList {
         );
       _categories.add(product.value['category']);
       _instance.add(ProductModel(
-        id: cached ? product.value['product_id'] : product.key,
+        id: product.value['product_id'],
         name: product.value['name'],
-        barcode: product.value['barcode'].toString(),
+        barcode: cached ? product.value['barcode'] : product.key,
         category: product.value['category'],
         measureType: product.value['measure'].startsWith('QTY')
             ? Measure.qty

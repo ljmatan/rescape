@@ -20,6 +20,8 @@ class _InventoryPageState extends State<InventoryPage> {
     InventoryFilterController.init();
   }
 
+  void _rebuild() => setState(() {});
+
   @override
   Widget build(BuildContext context) {
     return DecoratedBox(
@@ -29,7 +31,6 @@ class _InventoryPageState extends State<InventoryPage> {
           DecoratedBox(
             decoration: BoxDecoration(
               color: Colors.white,
-              boxShadow: kElevationToShadow[2],
             ),
             child: SizedBox(
               width: MediaQuery.of(context).size.width,
@@ -100,6 +101,7 @@ class _InventoryPageState extends State<InventoryPage> {
               ),
             ),
           ),
+          const Divider(height: 0),
           Expanded(
             child: ListView(
               padding: EdgeInsets.zero,
@@ -125,11 +127,17 @@ class _InventoryPageState extends State<InventoryPage> {
                       children: [
                         if (!filter.hasData)
                           for (var product in ProductList.instance)
-                            InventoryEntry(product: product)
+                            InventoryEntry(
+                              product: product,
+                              rebuildParent: _rebuild,
+                            )
                         else
                           for (var product in ProductList.instance
                               .where((e) => e.category == filter.data))
-                            InventoryEntry(product: product)
+                            InventoryEntry(
+                              product: product,
+                              rebuildParent: _rebuild,
+                            )
                       ],
                     ),
                   ),

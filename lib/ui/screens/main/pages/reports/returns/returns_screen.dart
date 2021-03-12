@@ -6,8 +6,16 @@ import 'package:rescape/data/models/product_model.dart';
 import 'package:rescape/data/product_list.dart';
 import 'package:rescape/logic/api/orders.dart';
 import 'package:rescape/logic/i18n/i18n.dart';
+import 'package:rescape/ui/shared/result_dialog.dart';
 
-class ReturnsScreen extends StatelessWidget {
+class ReturnsScreen extends StatefulWidget {
+  @override
+  State<StatefulWidget> createState() {
+    return _ReturnsScreenState();
+  }
+}
+
+class _ReturnsScreenState extends State<ReturnsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -27,7 +35,7 @@ class ReturnsScreen extends StatelessWidget {
         ],
       ),
       body: FutureBuilder(
-        future: OrdersAPI.getReturs(),
+        future: OrdersAPI.getReturns(),
         builder: (context, orders) {
           if (orders.connectionState != ConnectionState.done ||
               orders.hasError ||
@@ -55,7 +63,7 @@ class ReturnsScreen extends StatelessWidget {
                     for (var product in entry.value['items'])
                       OrderItemModel(
                         product: ProductList.instance.firstWhere(
-                          (e) => e.id == product['id'],
+                          (e) => e.barcode == product['barcode'],
                         ),
                         measure: product['amount'],
                       ),
@@ -152,6 +160,13 @@ class ReturnsScreen extends StatelessWidget {
                                                   MainAxisAlignment
                                                       .spaceBetween,
                                               children: [
+                                                Padding(
+                                                  padding: const EdgeInsets
+                                                          .symmetric(
+                                                      horizontal: 12),
+                                                  child: Text(item.product.id
+                                                      .toString()),
+                                                ),
                                                 Flexible(
                                                   child:
                                                       Text(item.product.name),
@@ -184,28 +199,89 @@ class ReturnsScreen extends StatelessWidget {
                                 left: 12,
                                 right: 12,
                                 bottom: 16,
-                                child: GestureDetector(
-                                  child: DecoratedBox(
-                                    decoration: BoxDecoration(
-                                      boxShadow: kElevationToShadow[1],
-                                      borderRadius: BorderRadius.circular(4),
-                                      color: Theme.of(context).primaryColor,
-                                    ),
-                                    child: SizedBox(
-                                      width: MediaQuery.of(context).size.width,
-                                      height: 48,
-                                      child: Center(
-                                        child: Text(
-                                          I18N.text('BACK'),
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            color: Colors.white,
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: GestureDetector(
+                                        behavior: HitTestBehavior.opaque,
+                                        child: SizedBox(
+                                          width:
+                                              MediaQuery.of(context).size.width,
+                                          height: 48,
+                                          child: Center(
+                                            child: Text(
+                                              I18N.text('BACK'),
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
                                           ),
                                         ),
+                                        onTap: () => Navigator.pop(context),
                                       ),
                                     ),
-                                  ),
-                                  onTap: () => Navigator.pop(context),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: GestureDetector(
+                                        child: DecoratedBox(
+                                          decoration: BoxDecoration(
+                                            boxShadow: kElevationToShadow[1],
+                                            borderRadius:
+                                                BorderRadius.circular(4),
+                                            color:
+                                                Theme.of(context).primaryColor,
+                                          ),
+                                          child: SizedBox(
+                                            width: MediaQuery.of(context)
+                                                .size
+                                                .width,
+                                            height: 48,
+                                            child: Center(
+                                              child: Text(
+                                                I18N.text('DELETE'),
+                                                style: const TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  color: Colors.white,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                        onTap: () async {
+                                          showDialog(
+                                            context: context,
+                                            barrierColor: Colors.white70,
+                                            barrierDismissible: false,
+                                            builder: (context) => WillPopScope(
+                                                child: Center(
+                                                    child:
+                                                        CircularProgressIndicator()),
+                                                onWillPop: () async => false),
+                                          );
+                                          try {
+                                            final response =
+                                                await OrdersAPI.deleteReturn(
+                                                    order.key);
+                                            Navigator.pop(context);
+                                            await showDialog(
+                                                context: context,
+                                                barrierColor: Colors.white70,
+                                                barrierDismissible: false,
+                                                builder: (context) =>
+                                                    ResultDialog(
+                                                        statusCode: response
+                                                            .statusCode));
+                                            setState(() {});
+                                          } catch (e) {
+                                            Navigator.pop(context);
+                                            ScaffoldMessenger.of(context)
+                                                .showSnackBar(SnackBar(
+                                                    content: Text('$e')));
+                                          }
+                                        },
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ],

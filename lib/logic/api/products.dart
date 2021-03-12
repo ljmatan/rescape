@@ -10,7 +10,7 @@ abstract class ProductsAPI {
 
     final Map products = jsonDecode(response.body);
 
-    ProductList.setInstance(products);
+    await ProductList.setInstance(products);
   }
 
   static Future<http.Response> create(
@@ -23,10 +23,9 @@ abstract class ProductsAPI {
           int section) async =>
       await http.patch(
           Uri.parse(
-              'https://rescape-72b1b-default-rtdb.europe-west1.firebasedatabase.app/products/$id.json'),
+              'https://rescape-72b1b-default-rtdb.europe-west1.firebasedatabase.app/products/$barcode.json'),
           body: jsonEncode({
             'available': available,
-            'barcode': barcode,
             'category': category,
             'measure': measure,
             'name': name,
@@ -34,19 +33,23 @@ abstract class ProductsAPI {
             'section': section
           }));
 
+  static Future<http.Response> deleteProduct(String barcode) async =>
+      await http.delete(Uri.parse(
+          'https://rescape-72b1b-default-rtdb.europe-west1.firebasedatabase.app/products/$barcode.json'));
+
   static Future<http.Response> setProductSection(
-          String id, int section) async =>
+          String barcode, int section) async =>
       await http.patch(
         Uri.parse(
-            'https://rescape-72b1b-default-rtdb.europe-west1.firebasedatabase.app/products/$id.json'),
+            'https://rescape-72b1b-default-rtdb.europe-west1.firebasedatabase.app/products/$barcode.json'),
         body: jsonEncode({'section': section}),
       );
 
   static Future<http.Response> setProductAvailability(
-          String id, double available) async =>
+          String barcode, double available) async =>
       await http.patch(
         Uri.parse(
-            'https://rescape-72b1b-default-rtdb.europe-west1.firebasedatabase.app/products/$id.json'),
+            'https://rescape-72b1b-default-rtdb.europe-west1.firebasedatabase.app/products/$barcode.json'),
         body: jsonEncode({'available': available}),
       );
 

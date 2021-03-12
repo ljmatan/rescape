@@ -7,9 +7,10 @@ abstract class VehiclesAPI {
           'https://rescape-72b1b-default-rtdb.europe-west1.firebasedatabase.app/organisation/vehicles.json')))
       .body);
 
-  static Future<http.Response> addVehicle(String model, String plates) async =>
+  static Future<http.Response> addVehicle(
+          String model, String plates, int category) async =>
       await http.patch(
           Uri.parse(
               'https://rescape-72b1b-default-rtdb.europe-west1.firebasedatabase.app/organisation/vehicles/$model.json'),
-          body: jsonEncode({'plates': plates}));
+          body: jsonEncode({'plates': plates, 'category': category}));
 }

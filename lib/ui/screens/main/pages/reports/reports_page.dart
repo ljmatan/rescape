@@ -37,7 +37,7 @@ class _ReportsPageState extends State<ReportsPage> {
                     children: [
                       Icon(Icons.dangerous, size: 64),
                       Text(
-                        I18N.text('Damage') + (UserData.isOwner ? 's' : ''),
+                        I18N.text('Damage'),
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
                         ),
@@ -65,7 +65,7 @@ class _ReportsPageState extends State<ReportsPage> {
                     children: [
                       Icon(Icons.post_add, size: 64),
                       Text(
-                        I18N.text('Return') + (UserData.isOwner ? 's' : ''),
+                        I18N.text('Return'),
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
                         ),

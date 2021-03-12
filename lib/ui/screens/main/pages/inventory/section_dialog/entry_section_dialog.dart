@@ -6,12 +6,17 @@ import 'package:rescape/logic/api/products.dart';
 import 'package:rescape/logic/i18n/i18n.dart';
 import 'package:rescape/logic/storage/local.dart';
 import 'package:rescape/ui/screens/main/pages/inventory/section_dialog/bloc/selected_section_controller.dart';
+import 'package:rescape/ui/screens/main/pages/orders/selections/previous_orders/confirm_deletion_dialog.dart';
 import 'package:rescape/ui/shared/result_dialog.dart';
 
 class EntrySectionDialog extends StatefulWidget {
   final ProductModel product;
+  final Function rebuildParent;
 
-  EntrySectionDialog({@required this.product});
+  EntrySectionDialog({
+    @required this.product,
+    @required this.rebuildParent,
+  });
 
   @override
   State<StatefulWidget> createState() {
@@ -22,6 +27,16 @@ class EntrySectionDialog extends StatefulWidget {
 class _EntrySectionDialogState extends State<EntrySectionDialog> {
   TextEditingController _availableController;
 
+  Future<void> _delete(String comparisonBarcode) async =>
+      await DB.instance.delete('Products', where: 'barcode = ?', whereArgs: [
+        comparisonBarcode
+      ]).whenComplete(() => ProductsAPI.deleteProduct(comparisonBarcode)
+          .whenComplete(() => ProductList.instance
+              .removeWhere((e) => e.barcode == comparisonBarcode))
+          .whenComplete(() => widget.rebuildParent()));
+
+  static Future<void> _deleteEntry;
+
   @override
   void initState() {
     super.initState();
@@ -31,6 +46,7 @@ class _EntrySectionDialogState extends State<EntrySectionDialog> {
           text: widget.product.measureType == Measure.kg
               ? widget.product.available.toString()
               : widget.product.available.toStringAsFixed(0));
+    _deleteEntry = _delete(widget.product.barcode);
   }
 
   @override
@@ -131,15 +147,16 @@ class _EntrySectionDialogState extends State<EntrySectionDialog> {
                                     Center(child: CircularProgressIndicator()));
                             try {
                               await ProductsAPI.setProductSection(
-                                  widget.product.id, i);
+                                  widget.product.barcode, i);
                               await DB.instance.update(
                                 'Products',
                                 {'section': i},
-                                where: 'product_id = ?',
-                                whereArgs: ['${widget.product.id}'],
+                                where: 'barcode = ?',
+                                whereArgs: ['${widget.product.barcode}'],
                               );
                               ProductList.instance
-                                  .firstWhere((e) => e.id == widget.product.id)
+                                  .firstWhere((e) =>
+                                      e.barcode == widget.product.barcode)
                                   .section = i;
                               Navigator.pop(context);
                               Navigator.pop(context);
@@ -154,112 +171,147 @@ class _EntrySectionDialogState extends State<EntrySectionDialog> {
                       ),
                   ],
                 ),
-                if (UserData.isOwner || UserData.isManager)
+                if (UserData.isOwner)
                   Padding(
-                    padding: const EdgeInsets.only(top: 14),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: GestureDetector(
-                            behavior: HitTestBehavior.opaque,
+                    padding: const EdgeInsets.only(top: 14, bottom: 10),
+                    child: GestureDetector(
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(4),
+                          color: Theme.of(context).primaryColor,
+                          boxShadow: kElevationToShadow[1],
+                        ),
+                        child: SizedBox(
+                          width: MediaQuery.of(context).size.width,
+                          height: 48,
+                          child: Center(
+                            child: Text(
+                              I18N.text('DELETE'),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      onTap: () async {
+                        await showDialog(
+                          context: context,
+                          builder: (context) => ConfirmDeletionDialog(
+                            rebuildParent: widget.rebuildParent,
+                            future: _deleteEntry,
+                          ),
+                        );
+                        Navigator.pop(context);
+                      },
+                    ),
+                  ),
+                if (UserData.isOwner || UserData.isManager)
+                  Row(
+                    children: [
+                      Expanded(
+                        child: GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          child: SizedBox(
+                            width: MediaQuery.of(context).size.width,
+                            height: 48,
+                            child: Center(
+                              child: Text(
+                                I18N.text('CANCEL'),
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ),
+                          ),
+                          onTap: () => Navigator.pop(context),
+                        ),
+                      ),
+                      Expanded(
+                        child: GestureDetector(
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(4),
+                              color: Theme.of(context).primaryColor,
+                              boxShadow: kElevationToShadow[1],
+                            ),
                             child: SizedBox(
                               width: MediaQuery.of(context).size.width,
                               height: 48,
                               child: Center(
                                 child: Text(
-                                  I18N.text('CANCEL'),
+                                  I18N.text('UPDATE'),
                                   style: const TextStyle(
                                     fontWeight: FontWeight.bold,
+                                    color: Colors.white,
                                     fontSize: 16,
                                   ),
                                 ),
                               ),
                             ),
                           ),
-                        ),
-                        Expanded(
-                          child: GestureDetector(
-                            child: DecoratedBox(
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(4),
-                                color: Theme.of(context).primaryColor,
-                                boxShadow: kElevationToShadow[1],
-                              ),
-                              child: SizedBox(
-                                width: MediaQuery.of(context).size.width,
-                                height: 48,
-                                child: Center(
-                                  child: Text(
-                                    I18N.text('UPDATE'),
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
-                                      fontSize: 16,
-                                    ),
-                                  ),
+                          onTap: () async {
+                            if (_availableController.text ==
+                                widget.product.available.toString())
+                              Navigator.pop(context);
+                            else if (double.tryParse(
+                                    _availableController.text) ==
+                                null) {
+                              Navigator.of(context);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                      content: Text(I18N
+                                          .text('You must enter a number'))));
+                            } else {
+                              showDialog(
+                                context: context,
+                                barrierDismissible: false,
+                                barrierColor: Colors.white70,
+                                builder: (context) => WillPopScope(
+                                  child: Center(
+                                      child: CircularProgressIndicator()),
+                                  onWillPop: () async => false,
                                 ),
-                              ),
-                            ),
-                            onTap: () async {
-                              if (_availableController.text ==
-                                  widget.product.available.toString())
+                              );
+                              try {
+                                final double newAmount =
+                                    double.parse(_availableController.text);
+                                final response =
+                                    await ProductsAPI.setProductAvailability(
+                                        widget.product.barcode, newAmount);
+                                if (response.statusCode == 200) {
+                                  ProductList.instance
+                                      .firstWhere((e) =>
+                                          e.barcode == widget.product.barcode)
+                                      .available = newAmount;
+                                  await DB.instance.update(
+                                    'Products',
+                                    {'available': newAmount},
+                                    where: 'barcode = ?',
+                                    whereArgs: [widget.product.barcode],
+                                  );
+                                }
                                 Navigator.pop(context);
-                              else if (double.tryParse(
-                                      _availableController.text) ==
-                                  null) {
-                                Navigator.of(context);
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                        content: Text(I18N
-                                            .text('You must enter a number'))));
-                              } else {
                                 showDialog(
                                   context: context,
-                                  barrierDismissible: false,
                                   barrierColor: Colors.white70,
-                                  builder: (context) => WillPopScope(
-                                    child: Center(
-                                        child: CircularProgressIndicator()),
-                                    onWillPop: () async => false,
-                                  ),
+                                  barrierDismissible: false,
+                                  builder: (context) => ResultDialog(
+                                      statusCode: response.statusCode),
                                 );
-                                try {
-                                  final double newAmount =
-                                      double.parse(_availableController.text);
-                                  final response =
-                                      await ProductsAPI.setProductAvailability(
-                                          widget.product.id, newAmount);
-                                  if (response.statusCode == 200) {
-                                    ProductList.instance
-                                        .firstWhere(
-                                            (e) => e.id == widget.product.id)
-                                        .available = newAmount;
-                                    await DB.instance.update(
-                                      'Products',
-                                      {'available': newAmount},
-                                      where: 'product_id = ?',
-                                      whereArgs: [widget.product.id],
-                                    );
-                                  }
-                                  Navigator.pop(context);
-                                  showDialog(
-                                    context: context,
-                                    barrierColor: Colors.white70,
-                                    barrierDismissible: false,
-                                    builder: (context) => ResultDialog(
-                                        statusCode: response.statusCode),
-                                  );
-                                } catch (e) {
-                                  Navigator.pop(context);
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(content: Text('$e')));
-                                }
+                              } catch (e) {
+                                Navigator.pop(context);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text('$e')));
                               }
-                            },
-                          ),
+                            }
+                          },
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
               ],
             ),

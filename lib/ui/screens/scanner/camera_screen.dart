@@ -26,7 +26,7 @@ class CameraScreen extends StatefulWidget {
   final VehicleModel vehicle;
   final bool update;
 
-  CameraScreen({this.location, this.vehicle, this.update});
+  CameraScreen({this.location, this.vehicle, this.update: false});
 
   @override
   State<StatefulWidget> createState() {
@@ -42,6 +42,7 @@ class _CameraScreenState extends State<CameraScreen>
 
   bool _initialised = false;
 
+  // Here be dragons
   static Uint8List _concatenatePlanes(List<Plane> planes) {
     final WriteBuffer allBytes = WriteBuffer();
     for (Plane plane in planes) allBytes.putUint8List(plane.bytes);
@@ -85,6 +86,8 @@ class _CameraScreenState extends State<CameraScreen>
 
         if (scannedProduct != null) {
           _scanning(false);
+          print(barcodes.first.barcodeUnknown.rawValue);
+          print(scannedProduct.barcode);
 
           if (scannedProduct.measureType == Measure.kg)
             scannedProduct.barcode = barcode;
@@ -97,9 +100,11 @@ class _CameraScreenState extends State<CameraScreen>
             builder: (context) => AddItemDialog(product: scannedProduct),
           );
 
-          scannedProduct.barcode = scannedProduct.barcode.substring(0, 7);
-
-          Future.delayed(const Duration(seconds: 1), () => _scanning(true));
+          Future.delayed(const Duration(seconds: 1), () {
+            if (scannedProduct.measureType == Measure.kg)
+              scannedProduct.barcode = scannedProduct.barcode.substring(0, 7);
+            _scanning(true);
+          });
         } else
           print('Code $barcode not registered');
       } else
@@ -145,7 +150,7 @@ class _CameraScreenState extends State<CameraScreen>
     if (_controller == null || !_controller.value.isInitialized) return;
     if (state == AppLifecycleState.inactive)
       _controller?.dispose();
-    else if (state == AppLifecycleState.resumed) if (_controller != null)
+    else if (state == AppLifecycleState.resumed && _controller != null)
       _setController();
   }
 
@@ -169,17 +174,19 @@ class _CameraScreenState extends State<CameraScreen>
                     height: 44,
                     child: Center(
                       child: Text(
-                        widget.update
-                            ? I18N.text('Inventory Update')
-                            : widget.location != null
-                                ? I18N.text('New Order')
-                                : CurrentOrder.instance != null
-                                    ? I18N.text('Current Order')
-                                    : I18N.text('New Return'),
+                        (widget.update
+                                ? I18N.text('Inventory Update')
+                                : widget.location != null
+                                    ? I18N.text('New Order')
+                                    : CurrentOrder.instance != null
+                                        ? I18N.text('Current Order')
+                                        : I18N.text('New Return'))
+                            .split(' ')
+                            .join('\n'),
+                        textAlign: TextAlign.center,
                         style: TextStyle(
                           color: Theme.of(context).primaryColor,
                           fontWeight: FontWeight.w900,
-                          fontSize: 24,
                         ),
                       ),
                     ),
@@ -217,12 +224,13 @@ class _CameraScreenState extends State<CameraScreen>
   }
 
   @override
-  void dispose() {
+  void dispose() async {
     _barcodeScanner.close();
-    _controller?.dispose();
     LastScannedController.dispose();
     CurrentOrder.setInstance(null);
     NewOrder.clear();
+    await _controller?.stopImageStream();
+    _controller?.dispose();
     super.dispose();
   }
 }

@@ -21,10 +21,9 @@ class _CurrentOrderEntryState extends State<CurrentOrderEntry> {
   @override
   void initState() {
     super.initState();
-    _prepared = _prepared = Prefs.instance.getBool('${widget.item.product.id}');
     if (_prepared == null)
       _prepared = NewOrder.instance?.firstWhere(
-              (e) => e.product?.id == widget.item.product.id,
+              (e) => e.product?.barcode == widget.item.product.barcode,
               orElse: () => null) !=
           null;
   }

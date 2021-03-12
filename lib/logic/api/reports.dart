@@ -18,7 +18,7 @@ abstract class ReportsAPI {
 
   static Future<
       http
-          .Response> deleteReport(int key) async => await http.delete(Uri.parse(
+          .Response> deleteReport(String key) async => await http.delete(Uri.parse(
       'https://rescape-72b1b-default-rtdb.europe-west1.firebasedatabase.app/reports/damage/$key.json'));
 
   static Future getDamageReports() async => jsonDecode((await http.get(Uri.parse(

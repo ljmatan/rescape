@@ -7,8 +7,6 @@ import 'package:rescape/ui/screens/main/pages/reports/damages/damage_model.dart'
 import 'package:rescape/ui/shared/result_dialog.dart';
 
 class DamagesScreen extends StatelessWidget {
-  static final Future _getDamageReports = ReportsAPI.getDamageReports();
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -28,7 +26,7 @@ class DamagesScreen extends StatelessWidget {
         ],
       ),
       body: FutureBuilder(
-        future: _getDamageReports,
+        future: ReportsAPI.getDamageReports(),
         builder: (context, damages) {
           if (damages.connectionState != ConnectionState.done ||
               damages.hasError ||
@@ -58,6 +56,7 @@ class DamagesScreen extends StatelessWidget {
                   from: damages.data.entries.elementAt(i).value['from'],
                   message: damages.data.entries.elementAt(i).value['message'],
                   image: damages.data.entries.elementAt(i).value['image'],
+                  key: damages.data.entries.elementAt(i).key,
                 );
                 return Padding(
                   padding: EdgeInsets.fromLTRB(16, i == 0 ? 16 : 0, 16, 16),
@@ -149,8 +148,7 @@ class DamagesScreen extends StatelessWidget {
                                       try {
                                         final response =
                                             await ReportsAPI.deleteReport(
-                                                damages.data.entries
-                                                    .elementAt(i));
+                                                damage.key);
                                         Navigator.pop(context);
                                         showDialog(
                                           context: context,

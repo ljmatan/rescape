@@ -151,6 +151,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
                       SizedBox(
                         width: MediaQuery.of(context).size.width / 2 - 22,
                         child: DropdownButton(
+                          isExpanded: true,
                           value: _measureType,
                           items: [
                             DropdownMenuItem(
@@ -181,7 +182,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
                           keyboardType: TextInputType.number,
                           decoration: InputDecoration(
                             border: OutlineInputBorder(),
-                            labelText: I18N.text('Quantity'),
+                            labelText: I18N.text('In pack'),
                           ),
                         ),
                       ),
@@ -278,6 +279,9 @@ class _AddProductScreenState extends State<AddProductScreen> {
                             ),
                           ),
                           onTap: () async {
+                            FocusScope.of(context).unfocus();
+                            print(_measureType == Measure.qty &&
+                                int.tryParse(_amountController.text) != null);
                             if (_internalCodeController.text.isNotEmpty &&
                                 int.tryParse(_internalCodeController.text) !=
                                     null &&
@@ -287,12 +291,17 @@ class _AddProductScreenState extends State<AddProductScreen> {
                                                 _amountController.text) !=
                                             null ||
                                     _measureType == Measure.qty &&
-                                        int.tryParse(_amountController.text) !=
+                                        int.tryParse(double.parse(
+                                                    _amountController.text)
+                                                .toStringAsFixed(0)) !=
                                             null) &&
                                 _barcodeController.text.isNotEmpty &&
+                                _barcodeController.text != '3897900' &&
                                 int.tryParse(_barcodeController.text) != null &&
-                                (_barcodeController.text.length == 13 ||
-                                    _barcodeController.text.length == 7) &&
+                                ((_barcodeController.text.length == 13 &&
+                                        _measureType == Measure.qty) ||
+                                    (_barcodeController.text.length == 7 &&
+                                        _measureType == Measure.kg)) &&
                                 _nameController.text.isNotEmpty &&
                                 _categoryController.text.isNotEmpty &&
                                 (_measureType == Measure.kg

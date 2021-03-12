@@ -6,9 +6,11 @@ import 'package:rescape/data/user_data.dart';
 import 'package:rescape/logic/api/companies.dart';
 import 'package:rescape/logic/api/products.dart';
 import 'package:rescape/logic/cache/prefs.dart';
+import 'package:rescape/logic/i18n/locale_controller.dart';
 import 'package:rescape/logic/storage/local.dart';
 import 'package:rescape/ui/shared/overscroll_removed_behavior.dart';
 import 'ui/screens/main/main_view.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -32,6 +34,8 @@ void main() async {
 
   await Companies.getList();
 
+  LocaleController.init();
+
   UserData.init();
 
   runApp(MyApp());
@@ -52,7 +56,19 @@ class MyApp extends StatelessWidget {
         behavior: OverscrolLRemovedBehavior(),
         child: child,
       ),
-      home: MainView(),
+      home: StreamBuilder(
+        stream: LocaleController.stream,
+        builder: (context, locale) => MainView(),
+      ),
+      localizationsDelegates: [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: [
+        const Locale('en'),
+        const Locale('sr'),
+      ],
     );
   }
 }

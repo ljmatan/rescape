@@ -119,8 +119,9 @@ class _AddProductBarcodeScanState extends State<AddProductBarcodeScan>
   }
 
   @override
-  void dispose() {
+  void dispose() async {
     _barcodeScanner.close();
+    await _controller?.stopImageStream();
     _controller?.dispose();
     super.dispose();
   }

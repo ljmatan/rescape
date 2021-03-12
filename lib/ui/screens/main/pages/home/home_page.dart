@@ -77,10 +77,7 @@ class _HomePageState extends State<HomePage> {
       child: Column(
         children: [
           DecoratedBox(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              boxShadow: kElevationToShadow[2],
-            ),
+            decoration: BoxDecoration(color: Colors.white),
             child: AnimatedContainer(
               duration: const Duration(),
               width: MediaQuery.of(context).size.width,
@@ -181,6 +178,7 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
           ),
+          const Divider(height: 0),
           BlueprintDisplay(scrollController: _scrollController),
         ],
       ),

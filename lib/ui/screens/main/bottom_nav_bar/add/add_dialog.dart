@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:rescape/data/user_data.dart';
 import 'package:rescape/logic/i18n/i18n.dart';
 import 'package:rescape/ui/screens/add_product/add_product_screen.dart';
 import 'package:rescape/ui/screens/employee_managment/add_employee/add_employee_screen.dart';
+import 'package:rescape/ui/screens/employee_managment/remove_employee_screen.dart';
+import 'package:rescape/ui/screens/main/bloc/main_view_controller.dart';
 import 'package:rescape/ui/screens/scanner/camera_screen.dart';
 import 'employee_managment.dart';
 import 'entry_display.dart';
@@ -15,6 +18,7 @@ class AddDialog extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(12, 0, 12, 82),
         child: DecoratedBox(
           decoration: BoxDecoration(
+            boxShadow: kElevationToShadow[1],
             color: Theme.of(context).primaryColor,
             borderRadius: BorderRadius.circular(16),
           ),
@@ -39,6 +43,7 @@ class AddDialog extends StatelessWidget {
                       Navigator.of(context).push(MaterialPageRoute(
                           builder: (BuildContext context) =>
                               CameraScreen(update: true)));
+                      MainViewController.change(0);
                     },
                   ),
                 ),
@@ -67,12 +72,14 @@ class AddDialog extends StatelessWidget {
                 const SizedBox(height: 12),
                 AddEntryDisplay(
                   child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      EmployeeManagment(
-                        icon: Icons.person_remove,
-                        label: I18N.text('Remove Employee'),
-                        route: null,
-                      ),
+                      if (UserData.isOwner)
+                        EmployeeManagment(
+                          icon: Icons.person_remove,
+                          label: I18N.text('Remove Employee'),
+                          route: RemoveEmployeeScreen(),
+                        ),
                       EmployeeManagment(
                         icon: Icons.person_add,
                         label: I18N.text('New Employee'),

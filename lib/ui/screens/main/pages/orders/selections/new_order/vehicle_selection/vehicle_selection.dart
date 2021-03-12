@@ -4,6 +4,8 @@ import 'package:rescape/logic/i18n/i18n.dart';
 import 'package:rescape/ui/screens/main/pages/orders/selections/new_order/vehicle_selection/vehicle_entry.dart';
 
 class VehicleSelection extends StatelessWidget {
+  static final Future _getVehicles = VehiclesAPI.getVehicles();
+
   @override
   Widget build(BuildContext context) {
     return Material(
@@ -36,7 +38,7 @@ class VehicleSelection extends StatelessWidget {
           ),
           Expanded(
             child: FutureBuilder(
-              future: VehiclesAPI.getVehicles(),
+              future: _getVehicles,
               builder: (context, vehicles) => vehicles.connectionState !=
                           ConnectionState.done ||
                       vehicles.hasError

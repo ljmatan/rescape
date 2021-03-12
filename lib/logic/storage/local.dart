@@ -14,7 +14,7 @@ abstract class DB {
         await db.execute(
           'CREATE TABLE Products ('
           'id INTEGER PRIMARY KEY, '
-          'product_id TEXT, '
+          'product_id INTEGER, '
           'name TEXT, '
           'barcode TEXT, '
           'measure TEXT, '

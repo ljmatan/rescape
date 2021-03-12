@@ -4,8 +4,9 @@ import 'package:rescape/ui/screens/main/pages/inventory/section_dialog/entry_sec
 
 class InventoryEntry extends StatelessWidget {
   final ProductModel product;
+  final Function rebuildParent;
 
-  InventoryEntry({@required this.product});
+  InventoryEntry({@required this.product, @required this.rebuildParent});
 
   @override
   Widget build(BuildContext context) {
@@ -52,7 +53,10 @@ class InventoryEntry extends StatelessWidget {
         onTap: () => showDialog(
           context: context,
           barrierColor: Colors.white70,
-          builder: (context) => EntrySectionDialog(product: product),
+          builder: (context) => EntrySectionDialog(
+            product: product,
+            rebuildParent: rebuildParent,
+          ),
         ),
       ),
     );
