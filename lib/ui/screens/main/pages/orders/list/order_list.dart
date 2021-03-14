@@ -5,6 +5,7 @@ import 'package:rescape/data/models/product_model.dart';
 import 'package:rescape/data/user_data.dart';
 import 'package:rescape/logic/i18n/i18n.dart';
 import 'package:rescape/ui/screens/main/pages/orders/bloc/view_controller.dart';
+import 'package:rescape/ui/screens/main/pages/orders/list/edit_quantity_dialog.dart';
 import 'package:rescape/ui/screens/main/pages/orders/selection_display.dart';
 import 'package:rescape/ui/screens/main/pages/orders/selections/current_orders/current_orders.dart';
 import 'package:rescape/ui/shared/pdf_doc_display.dart';
@@ -12,9 +13,13 @@ import 'package:rescape/ui/screens/scanner/camera_screen.dart';
 
 class OrderList extends StatelessWidget {
   final CurrentOrderModel order;
-  final bool processed;
+  final bool processed, returns;
 
-  OrderList({this.order, this.processed: false});
+  OrderList({
+    this.order,
+    this.processed: false,
+    this.returns: false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -42,6 +47,8 @@ class OrderList extends StatelessWidget {
                                   order: order,
                                   screenWidth:
                                       MediaQuery.of(context).size.width,
+                                  processed: processed,
+                                  returns: returns,
                                 ),
                               ),
                             ),
@@ -66,41 +73,56 @@ class OrderList extends StatelessWidget {
               for (var item in order.items)
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      boxShadow: kElevationToShadow[1],
-                      borderRadius: BorderRadius.circular(4),
-                      color: Colors.white,
-                    ),
-                    child: SizedBox(
-                      width: MediaQuery.of(context).size.width,
-                      height: 56,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 12),
-                            child: Text(item.product.id.toString()),
-                          ),
-                          Flexible(
-                            child: Align(
-                              alignment: Alignment.centerLeft,
-                              child: Text(item.product.name),
-                            ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 12),
-                            child: Text(
-                              item.product.measureType == Measure.kg
-                                  ? '${item.measure}kg'
-                                  : '×${item.measure.floor()}',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
+                  child: StatefulBuilder(
+                    builder: (context, newState) => GestureDetector(
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          boxShadow: kElevationToShadow[1],
+                          borderRadius: BorderRadius.circular(4),
+                          color: Colors.white,
+                        ),
+                        child: SizedBox(
+                          width: MediaQuery.of(context).size.width,
+                          height: 56,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 12),
+                                child: Text(item.product.id.toString()),
                               ),
-                            ),
+                              Flexible(
+                                child: Align(
+                                  alignment: Alignment.centerLeft,
+                                  child: Text(item.product.name),
+                                ),
+                              ),
+                              Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 12),
+                                child: Text(
+                                  item.product.measureType == Measure.kg
+                                      ? '${item.measure}kg'
+                                      : '×${item.measure.floor()}',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
-                        ],
+                        ),
                       ),
+                      onTap: processed
+                          ? () async {
+                              showDialog(
+                                  context: context,
+                                  barrierColor: Colors.white70,
+                                  builder: (context) => EditAmountDialog(
+                                      item: item, rebuildParent: newState));
+                            }
+                          : null,
                     ),
                   ),
                 ),

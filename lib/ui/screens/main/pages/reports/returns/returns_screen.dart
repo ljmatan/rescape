@@ -6,6 +6,7 @@ import 'package:rescape/data/models/product_model.dart';
 import 'package:rescape/data/product_list.dart';
 import 'package:rescape/logic/api/orders.dart';
 import 'package:rescape/logic/i18n/i18n.dart';
+import 'package:rescape/ui/shared/blocking_dialog.dart';
 import 'package:rescape/ui/shared/result_dialog.dart';
 
 class ReturnsScreen extends StatefulWidget {
@@ -248,29 +249,14 @@ class _ReturnsScreenState extends State<ReturnsScreen> {
                                           ),
                                         ),
                                         onTap: () async {
-                                          showDialog(
-                                            context: context,
-                                            barrierColor: Colors.white70,
-                                            barrierDismissible: false,
-                                            builder: (context) => WillPopScope(
-                                                child: Center(
-                                                    child:
-                                                        CircularProgressIndicator()),
-                                                onWillPop: () async => false),
-                                          );
+                                          BlockingDialog.show(context);
                                           try {
                                             final response =
                                                 await OrdersAPI.deleteReturn(
                                                     order.key);
                                             Navigator.pop(context);
-                                            await showDialog(
-                                                context: context,
-                                                barrierColor: Colors.white70,
-                                                barrierDismissible: false,
-                                                builder: (context) =>
-                                                    ResultDialog(
-                                                        statusCode: response
-                                                            .statusCode));
+                                            await ResultDialog.show(
+                                                context, response.statusCode);
                                             setState(() {});
                                           } catch (e) {
                                             Navigator.pop(context);

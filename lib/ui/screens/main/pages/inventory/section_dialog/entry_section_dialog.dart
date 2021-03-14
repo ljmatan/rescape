@@ -6,7 +6,7 @@ import 'package:rescape/logic/api/products.dart';
 import 'package:rescape/logic/i18n/i18n.dart';
 import 'package:rescape/logic/storage/local.dart';
 import 'package:rescape/ui/screens/main/pages/inventory/section_dialog/bloc/selected_section_controller.dart';
-import 'package:rescape/ui/screens/main/pages/orders/selections/previous_orders/confirm_deletion_dialog.dart';
+import 'package:rescape/ui/shared/confirm_deletion_dialog.dart';
 import 'package:rescape/ui/shared/result_dialog.dart';
 
 class EntrySectionDialog extends StatefulWidget {
@@ -34,8 +34,6 @@ class _EntrySectionDialogState extends State<EntrySectionDialog> {
           .whenComplete(() => ProductList.instance
               .removeWhere((e) => e.barcode == comparisonBarcode))
           .whenComplete(() => widget.rebuildParent()));
-
-  static Future<void> _deleteEntry;
 
   @override
   void initState() {
@@ -295,13 +293,7 @@ class _EntrySectionDialogState extends State<EntrySectionDialog> {
                                   );
                                 }
                                 Navigator.pop(context);
-                                showDialog(
-                                  context: context,
-                                  barrierColor: Colors.white70,
-                                  barrierDismissible: false,
-                                  builder: (context) => ResultDialog(
-                                      statusCode: response.statusCode),
-                                );
+                                ResultDialog.show(context, response.statusCode);
                               } catch (e) {
                                 Navigator.pop(context);
                                 ScaffoldMessenger.of(context).showSnackBar(

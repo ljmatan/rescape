@@ -197,14 +197,7 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
                                 statusCode = 400;
                               }
                               Navigator.pop(context);
-                              showDialog(
-                                context: context,
-                                barrierDismissible: false,
-                                barrierColor: Colors.white70,
-                                builder: (context) => ResultDialog(
-                                  statusCode: statusCode,
-                                ),
-                              );
+                              ResultDialog.show(context, statusCode);
                             } else
                               ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                                   content: Text(I18N.text(

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:rescape/logic/api/organisation.dart';
-import 'package:rescape/ui/screens/main/pages/orders/selections/previous_orders/confirm_deletion_dialog.dart';
+import 'package:rescape/ui/shared/confirm_deletion_dialog.dart';
 
 class RemoveEmployeeScreen extends StatefulWidget {
   @override

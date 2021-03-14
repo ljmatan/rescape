@@ -1,15 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:rescape/data/product_list.dart';
-import 'package:rescape/data/user_data.dart';
-import 'package:rescape/logic/api/companies.dart';
-import 'package:rescape/logic/api/products.dart';
-import 'package:rescape/logic/cache/prefs.dart';
 import 'package:rescape/logic/i18n/locale_controller.dart';
-import 'package:rescape/logic/storage/local.dart';
+import 'package:rescape/ui/screens/splash/splash_screen.dart';
 import 'package:rescape/ui/shared/overscroll_removed_behavior.dart';
-import 'ui/screens/main/main_view.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 void main() async {
@@ -26,17 +20,7 @@ void main() async {
     systemNavigationBarIconBrightness: Brightness.dark,
   ));
 
-  await Prefs.init();
-
-  await DB.init();
-
-  if (ProductList.instance.isEmpty) await ProductsAPI.getList();
-
-  await Companies.getList();
-
   LocaleController.init();
-
-  UserData.init();
 
   runApp(MyApp());
 }
@@ -58,7 +42,7 @@ class MyApp extends StatelessWidget {
       ),
       home: StreamBuilder(
         stream: LocaleController.stream,
-        builder: (context, locale) => MainView(),
+        builder: (context, locale) => SplashScreen(),
       ),
       localizationsDelegates: [
         GlobalMaterialLocalizations.delegate,

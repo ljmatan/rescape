@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:rescape/data/models/order_item_model.dart';
 import 'package:rescape/data/models/product_model.dart';
 import 'package:rescape/data/new_order.dart';
-import 'package:rescape/logic/cache/prefs.dart';
 
 class CurrentOrderEntry extends StatefulWidget {
   final OrderItemModel item;

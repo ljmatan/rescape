@@ -146,13 +146,7 @@ class _DamageReportScreenState extends State<DamageReportScreen> {
                                       : null,
                                 );
                                 Navigator.pop(context);
-                                showDialog(
-                                  context: context,
-                                  barrierColor: Colors.white70,
-                                  barrierDismissible: false,
-                                  builder: (context) => ResultDialog(
-                                      statusCode: response.statusCode),
-                                );
+                                ResultDialog.show(context, response.statusCode);
                               } catch (e) {
                                 Navigator.pop(context);
                                 ScaffoldMessenger.of(context).showSnackBar(

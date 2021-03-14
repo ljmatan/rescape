@@ -2,16 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:rescape/data/company_list.dart';
 import 'package:rescape/data/models/current_order_model.dart';
 import 'package:rescape/data/models/order_item_model.dart';
-import 'package:rescape/data/models/product_model.dart';
 import 'package:rescape/data/models/vehicle_model.dart';
 import 'package:rescape/data/product_list.dart';
 import 'package:rescape/logic/api/orders.dart';
 import 'package:rescape/logic/i18n/i18n.dart';
 import 'package:rescape/ui/screens/main/pages/orders/bloc/view_controller.dart';
 import 'package:rescape/ui/screens/main/pages/orders/selection_display.dart';
-import 'package:rescape/ui/screens/main/pages/orders/selections/current_orders/order_list.dart';
+import 'package:rescape/ui/screens/main/pages/orders/list/order_list.dart';
 
 class CurrentOrders extends StatefulWidget {
+  final bool rebuild;
+
+  CurrentOrders({this.rebuild: false});
+
   @override
   State<StatefulWidget> createState() {
     return _CurrentOrdersState();
@@ -22,6 +25,12 @@ class _CurrentOrdersState extends State<CurrentOrders> {
   static Future _getCurrent = OrdersAPI().getCurrent();
 
   static Key _futureKey = UniqueKey();
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.rebuild) _getCurrent = OrdersAPI().getCurrent();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -82,16 +91,6 @@ class _CurrentOrdersState extends State<CurrentOrders> {
                         ),
                 );
               else {
-                for (var entry in orders.data.entries) {
-                  {
-                    for (var product in entry.value['items'])
-                      print(ProductList.instance.firstWhere((e) =>
-                              e.barcode.length == 7 &&
-                                  product['barcode'].startsWith(e.barcode) ||
-                              e.barcode == product['barcode']) !=
-                          null);
-                  }
-                }
                 List<CurrentOrderModel> _orders = [
                   for (var entry in orders.data.entries)
                     CurrentOrderModel(

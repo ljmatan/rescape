@@ -150,14 +150,8 @@ class DamagesScreen extends StatelessWidget {
                                             await ReportsAPI.deleteReport(
                                                 damage.key);
                                         Navigator.pop(context);
-                                        showDialog(
-                                          context: context,
-                                          barrierDismissible: false,
-                                          barrierColor: Colors.white70,
-                                          builder: (context) => ResultDialog(
-                                            statusCode: response.statusCode,
-                                          ),
-                                        );
+                                        ResultDialog.show(
+                                            context, response.statusCode);
                                       } catch (e) {
                                         Navigator.pop(context);
                                         ScaffoldMessenger.of(context)

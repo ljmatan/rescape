@@ -336,15 +336,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
                                 statusCode = 400;
                               }
                               Navigator.pop(context);
-                              showDialog(
-                                context: context,
-                                barrierDismissible: false,
-                                barrierColor: Colors.white70,
-                                builder: (context) => WillPopScope(
-                                  child: ResultDialog(statusCode: statusCode),
-                                  onWillPop: () async => false,
-                                ),
-                              );
+                              ResultDialog.show(context, statusCode);
                             } else
                               ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(

@@ -61,12 +61,8 @@ class _ConfirmDeletionDialogState extends State<ConfirmDeletionDialog> {
                                         ? await OrdersAPI.deleteProcessed()
                                         : await widget.future();
                                     if (response.statusCode == 200) {
-                                      await showDialog(
-                                          context: context,
-                                          barrierDismissible: false,
-                                          barrierColor: Colors.white70,
-                                          builder: (context) =>
-                                              ResultDialog(statusCode: 200));
+                                      await ResultDialog.show(
+                                          context, response.statusCode);
                                       widget.rebuildParent();
                                     }
                                   } catch (e) {

@@ -12,18 +12,21 @@ class OrdersAPI {
           'https://rescape-72b1b-default-rtdb.europe-west1.firebasedatabase.app/orders/current.json')))
       .body);
 
-  static Future getCurrentS() async => jsonDecode((await http.get(Uri.parse(
-          'https://rescape-72b1b-default-rtdb.europe-west1.firebasedatabase.app/orders/current.json')))
-      .body);
-
   Future getProcessed() async => jsonDecode((await http.get(Uri.parse(
           'https://rescape-72b1b-default-rtdb.europe-west1.firebasedatabase.app/orders/processed.json')))
       .body);
 
-  static Future<
-      http
-          .Response> deleteProcessed() async => await http.delete(Uri.parse(
-      'https://rescape-72b1b-default-rtdb.europe-west1.firebasedatabase.app/orders/processed.json'));
+  static Future<http.Response> deleteProcessed([String key]) async =>
+      await http.delete(Uri.parse(
+          'https://rescape-72b1b-default-rtdb.europe-west1.firebasedatabase.app/orders/processed' +
+              (key != null ? '/$key' : '') +
+              '.json'));
+
+  static Future<http.Response> deleteCurrent([String key]) async =>
+      await http.delete(Uri.parse(
+          'https://rescape-72b1b-default-rtdb.europe-west1.firebasedatabase.app/orders/current' +
+              (key != null ? '/$key' : '') +
+              '.json'));
 
   static Future orderPrepared(Map body, String key) async {
     await http.post(

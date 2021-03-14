@@ -3,11 +3,20 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:rescape/data/models/current_order_model.dart';
 import 'package:rescape/data/models/product_model.dart';
 import 'package:rescape/data/product_list.dart';
+import 'package:rescape/logic/api/orders.dart';
+import 'package:rescape/logic/api/products.dart';
 import 'package:rescape/logic/pdf/pdf_generation.dart';
+import 'package:rescape/logic/storage/local.dart';
+import 'package:rescape/ui/screens/main/pages/orders/bloc/view_controller.dart';
+import 'package:rescape/ui/screens/main/pages/orders/selections/current_orders/current_orders.dart';
+import 'package:rescape/ui/shared/confirm_deletion_dialog.dart';
+import 'package:rescape/ui/screens/main/pages/orders/selections/previous_orders/previous_orders.dart';
 import 'package:rescape/ui/shared/blocking_dialog.dart';
+import 'package:rescape/ui/shared/result_dialog.dart';
 
 class CustomTableCell extends StatelessWidget {
   final String label;
@@ -33,8 +42,14 @@ class CustomTableCell extends StatelessWidget {
 class PDFDocDisplay extends StatefulWidget {
   final CurrentOrderModel order;
   final double screenWidth;
+  final bool processed, returns;
 
-  PDFDocDisplay({this.order, @required this.screenWidth});
+  PDFDocDisplay({
+    this.order,
+    @required this.screenWidth,
+    this.processed: false,
+    this.returns: false,
+  });
 
   @override
   State<StatefulWidget> createState() {
@@ -49,34 +64,28 @@ class _PDFDocDisplayState extends State<PDFDocDisplay> {
       await _pageController.animateToPage(page,
           duration: const Duration(milliseconds: 300), curve: Curves.ease);
 
-  static final Set<String> _columnLabels = const {
-    'ŠIFRA',
-    'NAZIV ARTIKLA',
-    'J.M.',
-    'KOLIČINA'
-  };
-
   List _itemsList;
   List _splitLists;
   List<GlobalKey> _pageKeys;
 
-  int _rowsPerPage;
+  bool _inventoryReport;
 
   @override
   void initState() {
     super.initState();
+    _inventoryReport = widget.order == null;
     final double pageHeight = widget.screenWidth * (297 / 210);
-    _rowsPerPage = ((pageHeight - 56) / 16).floor();
+    int _rowsPerPage = ((pageHeight - 56) / 16).floor();
     if ((pageHeight - 56 - (_rowsPerPage * 16)) < 10) _rowsPerPage--;
     _itemsList = [
-      if (widget.order != null)
+      if (!_inventoryReport)
         for (var item in widget.order.items) item
       else
         for (var item in ProductList.instance) item,
     ];
 
     List _removalList;
-    if (widget.order == null) {
+    if (_inventoryReport) {
       _removalList = [];
       for (var toCompare in _itemsList)
         for (var comparisonItem in _itemsList)
@@ -102,9 +111,8 @@ class _PDFDocDisplayState extends State<PDFDocDisplay> {
         _itemsList.removeWhere((e) => e.id == toRemove.id);
         _itemsList.add(toRemove);
       }
+      _itemsList.sort((a, b) => a.id.compareTo(b.id));
     }
-
-    if (widget.order == null) _itemsList.sort((a, b) => a.id.compareTo(b.id));
 
     if (_itemsList.length > _rowsPerPage) {
       _splitLists = [];
@@ -147,15 +155,102 @@ class _PDFDocDisplayState extends State<PDFDocDisplay> {
             await _image.toByteData(format: ui.ImageByteFormat.png);
         _pages.add(imageByteData.buffer.asUint8List());
         await _goToPage(i + 1);
-      }
+      } else
+        throw Exception('Something went wrong');
     }
     await PDFGeneration.createPDF(_pages, size);
+    _pages.clear();
+  }
+
+  static final Set<String> _columnLabels = const {
+    'ŠIFRA',
+    'NAZIV ARTIKLA',
+    'J.M.',
+    'KOLIČINA'
+  };
+
+  Future<void> _delete() async {
+    BlockingDialog.show(context);
+    int statusCode = 400;
+    try {
+      if (widget.processed)
+        statusCode =
+            (await OrdersAPI.deleteProcessed(widget.order.key)).statusCode;
+      else
+        statusCode =
+            (await OrdersAPI.deleteCurrent(widget.order.key)).statusCode;
+    } catch (e) {
+      print('$e');
+    }
+    ResultDialog.show(context, statusCode);
+    Navigator.pop(context, statusCode);
+  }
+
+  Future<void> _confirmDeletion() => showDialog(
+      context: context,
+      builder: (context) => ConfirmDeletionDialog(
+            rebuildParent: () {},
+            future: _delete,
+          )).whenComplete(() => OrdersViewController.change(widget.processed
+      ? PreviousOrders(rebuild: true)
+      : CurrentOrders(rebuild: true)));
+
+  Future<void> _updateInventory() async {
+    BlockingDialog.show(context);
+    int statusCode = 400;
+    try {
+      await ProductsAPI.getList();
+      final Map productsMap = {
+        for (var item in widget.order.items)
+          item.product.barcode: {
+            'product_id': item.product.id,
+            'available': ProductList.instance
+                    .firstWhere((e) => e.barcode == item.product.barcode)
+                    .available -
+                item.measure,
+            'name': item.product.name,
+            'barcode': item.product.measureType == Measure.kg
+                ? item.product.barcode.substring(0, 7)
+                : item.product.barcode,
+            'measure': item.product.measureType == Measure.kg
+                ? 'KG'
+                : 'QTY' + item.product.quantity.toString(),
+            'section': item.product.section,
+            'category': item.product.category,
+          }
+      };
+      statusCode =
+          (await ProductsAPI.massProductAvailabilityUpdate(productsMap))
+              .statusCode;
+      for (var item in widget.order.items) {
+        ProductList.instance
+            .firstWhere((e) => e.barcode == item.product.barcode)
+            .available -= item.measure;
+        await DB.instance.update(
+          'Products',
+          {
+            'available': ProductList.instance
+                    .firstWhere((e) => e.barcode == item.product.barcode)
+                    .available +
+                item.measure
+          },
+          where: 'barcode = ?',
+          whereArgs: [item.product.barcode],
+        );
+      }
+      await OrdersAPI.deleteProcessed(widget.order.key);
+      await ResultDialog.show(context, statusCode);
+      OrdersViewController.change(PreviousOrders(rebuild: true));
+    } catch (e) {
+      print(e);
+    }
+    Navigator.pop(context);
   }
 
   @override
   Widget build(BuildContext context) {
     final DateTime time =
-        widget.order != null ? widget.order.time : DateTime.now();
+        !_inventoryReport ? widget.order.time : DateTime.now();
     return Material(
       color: Colors.grey.shade200,
       textStyle: const TextStyle(
@@ -186,7 +281,7 @@ class _PDFDocDisplayState extends State<PDFDocDisplay> {
                                   padding: const EdgeInsets.only(
                                       top: 12, bottom: 10),
                                   child: Text(
-                                    (widget.order != null
+                                    (!_inventoryReport
                                             ? widget.order.location.companyName
                                             : 'Stanje') +
                                         (' ' +
@@ -250,28 +345,25 @@ class _PDFDocDisplayState extends State<PDFDocDisplay> {
                                           : _itemsList)
                                         TableRow(
                                           children: [
-                                            CustomTableCell(
-                                                (widget.order != null
-                                                        ? item.product.id
-                                                        : item.id)
-                                                    .toString()),
-                                            CustomTableCell(widget.order != null
+                                            CustomTableCell((!_inventoryReport
+                                                    ? item.product.id
+                                                    : item.id)
+                                                .toString()),
+                                            CustomTableCell(!_inventoryReport
                                                 ? item.product.name
                                                 : item.name),
-                                            CustomTableCell(
-                                                (widget.order != null
-                                                                ? item.product
-                                                                : item)
-                                                            .measureType ==
-                                                        Measure.kg
-                                                    ? 'kg'
-                                                    : 'kom'),
-                                            CustomTableCell((widget.order !=
-                                                        null
+                                            CustomTableCell((!_inventoryReport
+                                                            ? item.product
+                                                            : item)
+                                                        .measureType ==
+                                                    Measure.kg
+                                                ? 'kg'
+                                                : 'kom'),
+                                            CustomTableCell((!_inventoryReport
                                                     ? item.measure
                                                     : item.available)
                                                 .toString()
-                                                .split((widget.order != null
+                                                .split((!_inventoryReport
                                                                 ? item.product
                                                                 : item)
                                                             .measureType ==
@@ -294,22 +386,22 @@ class _PDFDocDisplayState extends State<PDFDocDisplay> {
                 ),
             ],
           ),
-          if (widget.order != null)
-            Positioned(
-              right: 0,
-              child: Row(
-                children: [
+          Positioned(
+            right: 0,
+            child: Row(
+              children: [
+                if (widget.processed)
                   IconButton(
                     icon: Icon(Icons.delete_forever),
-                    onPressed: () => Navigator.pop(context),
+                    onPressed: () async => await _confirmDeletion(),
                   ),
-                  IconButton(
-                    icon: Icon(Icons.close),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                ],
-              ),
+                IconButton(
+                  icon: Icon(Icons.close),
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ],
             ),
+          ),
           Positioned(
             left: 16,
             right: 16,
@@ -325,7 +417,11 @@ class _PDFDocDisplayState extends State<PDFDocDisplay> {
                       height: 48,
                       child: Center(
                         child: Text(
-                          widget.order != null ? 'CONFIRM' : 'CLOSE',
+                          !_inventoryReport
+                              ? !widget.processed
+                                  ? 'DELETE'
+                                  : 'CONFIRM'
+                              : 'CLOSE',
                           style: TextStyle(
                             color: Theme.of(context).primaryColor,
                             fontWeight: FontWeight.bold,
@@ -334,8 +430,10 @@ class _PDFDocDisplayState extends State<PDFDocDisplay> {
                         ),
                       ),
                     ),
-                    onTap: widget.order != null
-                        ? () async {}
+                    onTap: !_inventoryReport
+                        ? () async => !widget.processed
+                            ? await _confirmDeletion()
+                            : await _updateInventory()
                         : () => Navigator.pop(context),
                   ),
                 ),
@@ -362,16 +460,23 @@ class _PDFDocDisplayState extends State<PDFDocDisplay> {
                       ),
                     ),
                     onTap: () async {
-                      BlockingDialog.show(context);
-                      try {
-                        await _saveAsPDF();
-                        ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('File saved')));
-                      } catch (e) {
-                        ScaffoldMessenger.of(context)
-                            .showSnackBar(SnackBar(content: Text('$e')));
-                      }
-                      Navigator.pop(context);
+                      final PermissionStatus storagePermissionStatus =
+                          await Permission.storage.request();
+                      if (storagePermissionStatus == PermissionStatus.granted) {
+                        BlockingDialog.show(context);
+                        try {
+                          await _saveAsPDF();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('File saved')));
+                        } catch (e) {
+                          ScaffoldMessenger.of(context)
+                              .showSnackBar(SnackBar(content: Text('$e')));
+                        }
+                        Navigator.pop(context);
+                      } else
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                            content: Text(
+                                'You must grant storage permission in order to do this')));
                     },
                   ),
                 ),

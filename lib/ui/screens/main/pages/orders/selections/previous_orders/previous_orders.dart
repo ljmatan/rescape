@@ -8,10 +8,14 @@ import 'package:rescape/logic/api/orders.dart';
 import 'package:rescape/logic/i18n/i18n.dart';
 import 'package:rescape/ui/screens/main/pages/orders/bloc/view_controller.dart';
 import 'package:rescape/ui/screens/main/pages/orders/selection_display.dart';
-import 'package:rescape/ui/screens/main/pages/orders/selections/current_orders/order_list.dart';
-import 'package:rescape/ui/screens/main/pages/orders/selections/previous_orders/confirm_deletion_dialog.dart';
+import 'package:rescape/ui/screens/main/pages/orders/list/order_list.dart';
+import 'package:rescape/ui/shared/confirm_deletion_dialog.dart';
 
 class PreviousOrders extends StatefulWidget {
+  final bool rebuild;
+
+  PreviousOrders({this.rebuild: false});
+
   @override
   State<StatefulWidget> createState() {
     return _PreviousOrdersState();
@@ -24,6 +28,12 @@ class _PreviousOrdersState extends State<PreviousOrders> {
   static Key _futureKey = UniqueKey();
 
   void _deleted() => OrdersViewController.change(SelectionDisplay());
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.rebuild) _getProcessed = OrdersAPI().getProcessed();
+  }
 
   @override
   Widget build(BuildContext context) {

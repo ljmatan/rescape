@@ -237,13 +237,7 @@ class _ItemsListDialogState extends State<ItemsListDialog> {
                             await ProductsAPI.massProductAvailabilityUpdate(
                                 productsMap);
                         Navigator.pop(context);
-                        await showDialog(
-                          context: context,
-                          barrierDismissible: false,
-                          barrierColor: Colors.white70,
-                          builder: (context) =>
-                              ResultDialog(statusCode: response.statusCode),
-                        );
+                        ResultDialog.show(context, response.statusCode);
                         Navigator.pop(context);
                       } else if (widget.location != null) {
                         showDialog(
@@ -273,13 +267,7 @@ class _ItemsListDialogState extends State<ItemsListDialog> {
                           },
                         );
                         Navigator.pop(context);
-                        await showDialog(
-                          context: context,
-                          barrierDismissible: false,
-                          barrierColor: Colors.white70,
-                          builder: (context) =>
-                              ResultDialog(statusCode: response.statusCode),
-                        );
+                        ResultDialog.show(context, response.statusCode);
                         Navigator.pop(context);
                       } else if (CurrentOrder.instance != null) {
                         final DateTime date = await showDatePicker(
@@ -322,14 +310,7 @@ class _ItemsListDialogState extends State<ItemsListDialog> {
                             CurrentOrder.instance.key,
                           );
                           Navigator.pop(context);
-                          await showDialog(
-                            context: context,
-                            barrierDismissible: false,
-                            barrierColor: Colors.white70,
-                            builder: (context) => ResultDialog(
-                              statusCode: response,
-                            ),
-                          );
+                          ResultDialog.show(context, response.statusCode);
                           Navigator.pop(context);
                         }
                       } else {
@@ -366,14 +347,7 @@ class _ItemsListDialogState extends State<ItemsListDialog> {
                             },
                           );
                           Navigator.pop(context);
-                          await showDialog(
-                            context: context,
-                            barrierDismissible: false,
-                            barrierColor: Colors.white70,
-                            builder: (context) => ResultDialog(
-                              statusCode: response.statusCode,
-                            ),
-                          );
+                          ResultDialog.show(context, response.statusCode);
                           Navigator.pop(context);
                         }
                       }
