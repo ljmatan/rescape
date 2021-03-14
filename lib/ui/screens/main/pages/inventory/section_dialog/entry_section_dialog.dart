@@ -46,11 +46,11 @@ class _EntrySectionDialogState extends State<EntrySectionDialog> {
           text: widget.product.measureType == Measure.kg
               ? widget.product.available.toString()
               : widget.product.available.toStringAsFixed(0));
-    _deleteEntry = _delete(widget.product.barcode);
   }
 
   @override
   Widget build(BuildContext context) {
+    void delete() => _delete(widget.product.barcode);
     return Align(
       alignment: Alignment.bottomCenter,
       child: Padding(
@@ -201,7 +201,7 @@ class _EntrySectionDialogState extends State<EntrySectionDialog> {
                           context: context,
                           builder: (context) => ConfirmDeletionDialog(
                             rebuildParent: widget.rebuildParent,
-                            future: _deleteEntry,
+                            future: delete,
                           ),
                         );
                         Navigator.pop(context);

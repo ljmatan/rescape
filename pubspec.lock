@@ -154,6 +154,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "4.0.0"
+  images_to_pdf:
+    dependency: "direct main"
+    description:
+      name: images_to_pdf
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "0.0.1"
   intl:
     dependency: transitive
     description:
@@ -190,7 +197,7 @@ packages:
     source: hosted
     version: "1.8.0"
   path_provider:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: path_provider
       url: "https://pub.dartlang.org"

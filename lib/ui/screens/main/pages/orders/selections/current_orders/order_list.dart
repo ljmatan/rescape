@@ -7,6 +7,7 @@ import 'package:rescape/logic/i18n/i18n.dart';
 import 'package:rescape/ui/screens/main/pages/orders/bloc/view_controller.dart';
 import 'package:rescape/ui/screens/main/pages/orders/selection_display.dart';
 import 'package:rescape/ui/screens/main/pages/orders/selections/current_orders/current_orders.dart';
+import 'package:rescape/ui/shared/pdf_doc_display.dart';
 import 'package:rescape/ui/screens/scanner/camera_screen.dart';
 
 class OrderList extends StatelessWidget {
@@ -24,17 +25,39 @@ class OrderList extends StatelessWidget {
             children: [
               if (UserData.isOwner || UserData.isManager)
                 Padding(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(order.vehicle.model + ' ' + order.vehicle.plates),
-                      Text(order.time.day.toString() +
-                          '.' +
-                          order.time.month.toString() +
-                          '.' +
-                          order.time.year.toString() +
-                          '.'),
+                      Row(
+                        children: [
+                          if (UserData.isManager || UserData.isOwner)
+                            IconButton(
+                              icon: Icon(Icons.list),
+                              onPressed: () => showDialog(
+                                context: context,
+                                barrierColor: Colors.grey.shade200,
+                                builder: (context) => PDFDocDisplay(
+                                  order: order,
+                                  screenWidth:
+                                      MediaQuery.of(context).size.width,
+                                ),
+                              ),
+                            ),
+                          Padding(
+                            padding: const EdgeInsets.only(left: 12),
+                            child: Text(
+                              order.time.day.toString() +
+                                  '.' +
+                                  order.time.month.toString() +
+                                  '.' +
+                                  order.time.year.toString() +
+                                  '.',
+                            ),
+                          ),
+                        ],
+                      ),
                     ],
                   ),
                 )

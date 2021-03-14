@@ -5,6 +5,8 @@ import 'package:rescape/logic/i18n/i18n.dart';
 import 'package:rescape/ui/screens/main/pages/inventory/bloc/filter_controller.dart';
 import 'package:rescape/ui/screens/main/pages/inventory/filter_dialog/filter_dialog.dart';
 import 'package:rescape/ui/screens/main/pages/inventory/inventory_entry.dart';
+import 'package:rescape/ui/shared/blocking_dialog.dart';
+import 'package:rescape/ui/shared/pdf_doc_display.dart';
 
 class InventoryPage extends StatefulWidget {
   @override
@@ -59,14 +61,19 @@ class _InventoryPageState extends State<InventoryPage> {
                     Row(
                       children: [
                         IconButton(
+                          icon: Icon(Icons.list),
+                          onPressed: () => showDialog(
+                            context: context,
+                            barrierColor: Colors.grey.shade200,
+                            builder: (context) => PDFDocDisplay(
+                              screenWidth: MediaQuery.of(context).size.width,
+                            ),
+                          ),
+                        ),
+                        IconButton(
                           icon: Icon(Icons.refresh),
                           onPressed: () async {
-                            showDialog(
-                                barrierDismissible: false,
-                                barrierColor: Colors.white70,
-                                context: context,
-                                builder: (context) =>
-                                    Center(child: CircularProgressIndicator()));
+                            BlockingDialog.show(context);
                             try {
                               await ProductsAPI.getList();
                               setState(() {});
@@ -123,23 +130,25 @@ class _InventoryPageState extends State<InventoryPage> {
                   padding: const EdgeInsets.only(bottom: 16),
                   child: StreamBuilder(
                     stream: InventoryFilterController.stream,
-                    builder: (context, filter) => Column(
-                      children: [
-                        if (!filter.hasData)
-                          for (var product in ProductList.instance)
-                            InventoryEntry(
-                              product: product,
-                              rebuildParent: _rebuild,
-                            )
-                        else
-                          for (var product in ProductList.instance
-                              .where((e) => e.category == filter.data))
-                            InventoryEntry(
-                              product: product,
-                              rebuildParent: _rebuild,
-                            )
-                      ],
-                    ),
+                    builder: (context, filter) {
+                      return Column(
+                        children: [
+                          if (!filter.hasData)
+                            for (var product in ProductList.instance)
+                              InventoryEntry(
+                                product: product,
+                                rebuildParent: _rebuild,
+                              )
+                          else
+                            for (var product in ProductList.instance
+                                .where((e) => e.category == filter.data))
+                              InventoryEntry(
+                                product: product,
+                                rebuildParent: _rebuild,
+                              ),
+                        ],
+                      );
+                    },
                   ),
                 ),
               ],
