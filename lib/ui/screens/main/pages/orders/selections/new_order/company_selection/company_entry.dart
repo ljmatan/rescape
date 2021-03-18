@@ -4,7 +4,7 @@ import 'package:rescape/data/models/company_model.dart';
 import 'package:rescape/ui/screens/main/pages/orders/bloc/view_controller.dart';
 import 'package:rescape/ui/screens/main/pages/orders/selection_display.dart';
 import 'package:rescape/ui/screens/main/pages/orders/selections/new_order/vehicle_selection/vehicle_selection.dart';
-import 'package:rescape/ui/screens/scanner/camera_screen.dart';
+import 'package:rescape/ui/screens/new_order/new_order_screen.dart';
 
 class LocationNumberRow extends StatelessWidget {
   final int upTo;
@@ -46,7 +46,7 @@ class LocationNumberRow extends StatelessWidget {
               );
               if (selected != null) {
                 Navigator.of(context).push(MaterialPageRoute(
-                    builder: (BuildContext context) => CameraScreen(
+                    builder: (BuildContext context) => NewOrderScreen(
                         vehicle: selected,
                         location: LocationList.instance.firstWhere((e) =>
                             e.companyName == companyLocations[i].companyName &&
@@ -153,7 +153,7 @@ class _CompanyEntryState extends State<CompanyEntry> {
             );
             if (selected != null) {
               Navigator.of(context).push(MaterialPageRoute(
-                  builder: (BuildContext context) => CameraScreen(
+                  builder: (BuildContext context) => NewOrderScreen(
                       vehicle: selected,
                       location: LocationList.instance
                           .firstWhere((e) => e.companyName == widget.label))));

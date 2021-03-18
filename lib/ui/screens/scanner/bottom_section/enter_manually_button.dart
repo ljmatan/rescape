@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:rescape/logic/i18n/i18n.dart';
-import '../manual_entry/manual_entry_dialog.dart';
+import 'package:rescape/ui/shared/manual_entry/manual_entry_dialog.dart';
 
 class EnterManuallyButton extends StatelessWidget {
   final Function scanning;

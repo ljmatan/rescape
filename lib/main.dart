@@ -40,10 +40,7 @@ class MyApp extends StatelessWidget {
         behavior: OverscrolLRemovedBehavior(),
         child: child,
       ),
-      home: StreamBuilder(
-        stream: LocaleController.stream,
-        builder: (context, locale) => SplashScreen(),
-      ),
+      home: SplashScreen(),
       localizationsDelegates: [
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,

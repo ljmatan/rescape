@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:rescape/data/models/order_item_model.dart';
 import 'package:rescape/data/models/product_model.dart';
@@ -5,11 +7,69 @@ import 'package:rescape/data/new_order.dart';
 import 'package:rescape/logic/barcode/processing.dart';
 import 'package:rescape/logic/i18n/i18n.dart';
 
+enum PackageType { pcs, box }
+
+class PackageTypeSelection extends StatelessWidget {
+  final StreamController streamController;
+  final PackageType type;
+  final String label;
+
+  PackageTypeSelection({
+    @required this.streamController,
+    @required this.type,
+    @required this.label,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: StreamBuilder(
+        stream: streamController.stream,
+        initialData: PackageType.pcs,
+        builder: (context, selected) => GestureDetector(
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              border: Border.all(
+                color: selected.data == type
+                    ? Theme.of(context).primaryColor
+                    : Colors.grey,
+              ),
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: SizedBox(
+              width: MediaQuery.of(context).size.width,
+              height: 48,
+              child: Center(
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    fontWeight: selected.data == PackageType.pcs
+                        ? FontWeight.bold
+                        : null,
+                    color: selected.data == type
+                        ? Theme.of(context).primaryColor
+                        : Colors.grey,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          onTap: () => streamController.add(type),
+        ),
+      ),
+    );
+  }
+}
+
 class AddItemDialog extends StatefulWidget {
   final ProductModel product;
-  final bool autofocus;
+  final bool autofocus, newOrder;
 
-  AddItemDialog({@required this.product, this.autofocus = false});
+  AddItemDialog({
+    @required this.product,
+    this.autofocus = false,
+    this.newOrder = false,
+  });
 
   @override
   State<StatefulWidget> createState() {
@@ -26,6 +86,10 @@ class _AddItemDialogState extends State<AddItemDialog> {
 
   bool _measureInQty;
 
+  PackageType _selectedType;
+  StreamController _packageTypeController;
+  StreamSubscription _packageTypeSubscription;
+
   @override
   void initState() {
     super.initState();
@@ -35,13 +99,25 @@ class _AddItemDialogState extends State<AddItemDialog> {
       _qtyController =
           TextEditingController(text: '${widget.product.quantity}');
     } else {
-      _weight = BarcodeProcessing.weight(widget.product.barcode);
+      _weight = widget.product.barcode.length == 7
+          ? 1
+          : BarcodeProcessing.weight(widget.product.barcode);
       _weightController = TextEditingController(text: '$_weight');
     }
     _qtyController
         ?.addListener(() => _quantity = double.tryParse(_qtyController.text));
     _weightController
         ?.addListener(() => _weight = double.tryParse(_weightController.text));
+    if (_measureInQty) {
+      _packageTypeController = StreamController.broadcast();
+      _selectedType = PackageType.pcs;
+      _packageTypeSubscription =
+          _packageTypeController.stream.listen((type) => setState(() {
+                _quantity = 1;
+                _qtyController.text = '1';
+                _selectedType = type;
+              }));
+    }
   }
 
   void _confirm() {
@@ -56,8 +132,13 @@ class _AddItemDialogState extends State<AddItemDialog> {
       NewOrder.add(
         OrderItemModel(
           product: widget.product,
-          measure: _quantity ?? _weight,
+          measure: _measureInQty
+              ? _selectedType == PackageType.box
+                  ? _quantity * widget.product.quantity
+                  : _quantity
+              : _weight,
         ),
+        widget.newOrder,
       );
     }
   }
@@ -94,9 +175,27 @@ class _AddItemDialogState extends State<AddItemDialog> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(_measureInQty
-                            ? I18N.text('Pieces') + ':'
-                            : I18N.text('Kgs') + ':'),
+                        _measureInQty
+                            ? DropdownButton(
+                                value: _selectedType,
+                                items: [
+                                  DropdownMenuItem(
+                                    child: Text(
+                                      I18N.text('Pieces'),
+                                    ),
+                                    value: PackageType.pcs,
+                                  ),
+                                  DropdownMenuItem(
+                                    child: Text(
+                                      I18N.text('Boxes'),
+                                    ),
+                                    value: PackageType.box,
+                                  ),
+                                ],
+                                onChanged: (value) =>
+                                    _packageTypeController.add(value),
+                              )
+                            : Text(I18N.text('Kgs') + ':'),
                         SizedBox(
                           width: 150,
                           height: 56,
@@ -157,6 +256,8 @@ class _AddItemDialogState extends State<AddItemDialog> {
   void dispose() {
     _qtyController?.dispose();
     _weightController?.dispose();
+    _packageTypeController?.close();
+    _packageTypeSubscription?.cancel();
     super.dispose();
   }
 }

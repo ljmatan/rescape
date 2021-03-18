@@ -1,8 +1,9 @@
 import 'dart:typed_data';
-
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:camera/camera.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_sound/flutter_sound.dart';
 import 'package:rescape/data/current_order.dart';
 import 'package:rescape/data/models/company_model.dart';
 import 'package:rescape/data/models/product_model.dart';
@@ -61,6 +62,15 @@ class _CameraScreenState extends State<CameraScreen>
 
   bool _processing = false;
 
+  var soundEffect;
+
+  Future<void> _getSoundEffect() async {
+    var asset = await rootBundle.load('assets/scanner_sound.mp3');
+    soundEffect = asset.buffer.asUint8List();
+  }
+
+  final _soundPlayer = FlutterSoundPlayer();
+
   void _processImage(CameraImage image) async {
     if (!_processing) {
       _processing = true;
@@ -86,11 +96,11 @@ class _CameraScreenState extends State<CameraScreen>
 
         if (scannedProduct != null) {
           _scanning(false);
-          print(barcodes.first.barcodeUnknown.rawValue);
-          print(scannedProduct.barcode);
 
           if (scannedProduct.measureType == Measure.kg)
             scannedProduct.barcode = barcode;
+
+          _soundPlayer.startPlayer(fromDataBuffer: soundEffect);
 
           if (await Vibration.hasVibrator()) Vibration.vibrate(duration: 100);
 
@@ -140,8 +150,10 @@ class _CameraScreenState extends State<CameraScreen>
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (widget.update) await ProductsAPI.getList();
       _cameras = await availableCameras();
+      await _getSoundEffect();
       _setController();
     });
+    _soundPlayer.openAudioSession();
   }
 
   @override
@@ -225,12 +237,13 @@ class _CameraScreenState extends State<CameraScreen>
 
   @override
   void dispose() async {
+    super.dispose();
     _barcodeScanner.close();
     LastScannedController.dispose();
     CurrentOrder.setInstance(null);
     NewOrder.clear();
+    _soundPlayer.closeAudioSession();
     await _controller?.stopImageStream();
     _controller?.dispose();
-    super.dispose();
   }
 }

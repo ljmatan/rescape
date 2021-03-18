@@ -25,6 +25,8 @@ dependencies:
   pinput: ^1.1.0
   path_provider: ^2.0.1
   images_to_pdf: ^0.0.1
+  decimal: ^1.0.0
+  flutter_sound: ^8.0.0+6
 
 dev_dependencies:
   flutter_test:

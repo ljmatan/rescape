@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:rescape/logic/api/orders.dart';
 import 'package:rescape/logic/i18n/i18n.dart';
 import 'package:rescape/ui/shared/result_dialog.dart';
 
@@ -7,7 +6,7 @@ class ConfirmDeletionDialog extends StatefulWidget {
   final dynamic future;
   final Function rebuildParent;
 
-  ConfirmDeletionDialog({@required this.rebuildParent, this.future});
+  ConfirmDeletionDialog({this.rebuildParent, this.future});
 
   @override
   State<StatefulWidget> createState() {
@@ -57,15 +56,15 @@ class _ConfirmDeletionDialogState extends State<ConfirmDeletionDialog> {
                                 onPressed: () async {
                                   setState(() => _confirmed = true);
                                   try {
-                                    final response = widget.future == null
-                                        ? await OrdersAPI.deleteProcessed()
-                                        : await widget.future();
-                                    if (response.statusCode == 200) {
-                                      await ResultDialog.show(
-                                          context, response.statusCode);
+                                    final statusCode = await widget.future();
+                                    await ResultDialog.show(
+                                        context, statusCode);
+                                    if (widget.rebuildParent != null)
                                       widget.rebuildParent();
-                                    }
+                                    else
+                                      Navigator.pop(context);
                                   } catch (e) {
+                                    print(e);
                                     Navigator.pop(context);
                                   }
                                 },
@@ -88,7 +87,7 @@ class _ConfirmDeletionDialogState extends State<ConfirmDeletionDialog> {
                 ),
               ),
       ),
-      onWillPop: () async => false,
+      onWillPop: () async => !_confirmed,
     );
   }
 }

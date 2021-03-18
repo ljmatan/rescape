@@ -4,8 +4,9 @@ import 'package:rescape/ui/screens/scanner/new_order_elements/add_item_dialog.da
 
 class ProductEntry extends StatelessWidget {
   final ProductModel product;
+  final bool newOrder;
 
-  ProductEntry({@required this.product});
+  ProductEntry({@required this.product, this.newOrder: false});
 
   @override
   Widget build(BuildContext context) {
@@ -50,18 +51,16 @@ class ProductEntry extends StatelessWidget {
           ),
         ),
         onTap: () async {
-          ProductModel edited = product;
-          if (edited.measureType == Measure.kg)
-            edited.barcode = edited.barcode + '010000';
           await showDialog(
             context: context,
             barrierColor: Colors.white70,
             builder: (context) => AddItemDialog(
-              product: edited,
+              product: product,
               autofocus: true,
+              newOrder: newOrder,
             ),
           );
-          Navigator.pop(context);
+          if (!newOrder) Navigator.pop(context);
         },
       ),
     );

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:rescape/data/user_data.dart';
 import 'package:rescape/logic/i18n/i18n.dart';
 import 'package:rescape/ui/screens/add_product/add_product_screen.dart';
+import 'package:rescape/ui/screens/companies/companies_screen.dart';
 import 'package:rescape/ui/screens/employee_managment/add_employee/add_employee_screen.dart';
 import 'package:rescape/ui/screens/employee_managment/remove_employee_screen.dart';
 import 'package:rescape/ui/screens/main/bloc/main_view_controller.dart';
@@ -27,6 +28,27 @@ class AddDialog extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
+                AddEntryDisplay(
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.storefront, size: 64),
+                        Text(I18N.text('Companies'),
+                            textAlign: TextAlign.center),
+                      ],
+                    ),
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.of(context).push(MaterialPageRoute(
+                          builder: (BuildContext context) =>
+                              CompaniesScreen()));
+                      MainViewController.change(0);
+                    },
+                  ),
+                ),
+                const SizedBox(height: 12),
                 AddEntryDisplay(
                   child: GestureDetector(
                     behavior: HitTestBehavior.opaque,

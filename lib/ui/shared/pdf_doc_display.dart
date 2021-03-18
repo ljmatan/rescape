@@ -9,6 +9,7 @@ import 'package:rescape/data/models/product_model.dart';
 import 'package:rescape/data/product_list.dart';
 import 'package:rescape/logic/api/orders.dart';
 import 'package:rescape/logic/api/products.dart';
+import 'package:rescape/logic/i18n/i18n.dart';
 import 'package:rescape/logic/pdf/pdf_generation.dart';
 import 'package:rescape/logic/storage/local.dart';
 import 'package:rescape/ui/screens/main/pages/orders/bloc/view_controller.dart';
@@ -17,6 +18,7 @@ import 'package:rescape/ui/shared/confirm_deletion_dialog.dart';
 import 'package:rescape/ui/screens/main/pages/orders/selections/previous_orders/previous_orders.dart';
 import 'package:rescape/ui/shared/blocking_dialog.dart';
 import 'package:rescape/ui/shared/result_dialog.dart';
+import 'package:decimal/decimal.dart';
 
 class CustomTableCell extends StatelessWidget {
   final String label;
@@ -106,7 +108,10 @@ class _PDFDocDisplayState extends State<PDFDocDisplay> {
       for (var toRemove in _removalList)
         for (var product in _itemsList
             .where((e) => e.id == toRemove.id && e.barcode != toRemove.barcode))
-          toRemove.available += product.available;
+          toRemove.available = double.parse(
+              (Decimal.parse(product.available.toString()) +
+                      Decimal.parse(toRemove.available.toString()))
+                  .toString());
       for (var toRemove in _removalList) {
         _itemsList.removeWhere((e) => e.id == toRemove.id);
         _itemsList.add(toRemove);
@@ -169,31 +174,24 @@ class _PDFDocDisplayState extends State<PDFDocDisplay> {
     'KOLIČINA'
   };
 
-  Future<void> _delete() async {
-    BlockingDialog.show(context);
+  Future<int> _delete() async {
     int statusCode = 400;
     try {
-      if (widget.processed)
-        statusCode =
-            (await OrdersAPI.deleteProcessed(widget.order.key)).statusCode;
-      else
-        statusCode =
-            (await OrdersAPI.deleteCurrent(widget.order.key)).statusCode;
+      statusCode =
+          (await OrdersAPI.deleteProcessed(widget.order.key)).statusCode;
     } catch (e) {
       print('$e');
     }
-    ResultDialog.show(context, statusCode);
-    Navigator.pop(context, statusCode);
+    return statusCode;
   }
 
   Future<void> _confirmDeletion() => showDialog(
       context: context,
+      barrierColor: Colors.white70,
       builder: (context) => ConfirmDeletionDialog(
-            rebuildParent: () {},
             future: _delete,
-          )).whenComplete(() => OrdersViewController.change(widget.processed
-      ? PreviousOrders(rebuild: true)
-      : CurrentOrders(rebuild: true)));
+          )).whenComplete(() => OrdersViewController.change(
+      widget.processed ? PreviousOrders() : CurrentOrders()));
 
   Future<void> _updateInventory() async {
     BlockingDialog.show(context);
@@ -223,24 +221,22 @@ class _PDFDocDisplayState extends State<PDFDocDisplay> {
           (await ProductsAPI.massProductAvailabilityUpdate(productsMap))
               .statusCode;
       for (var item in widget.order.items) {
-        ProductList.instance
-            .firstWhere((e) => e.barcode == item.product.barcode)
-            .available -= item.measure;
+        final product = ProductList.instance
+            .firstWhere((e) => e.barcode == item.product.barcode);
+        product.available = double.parse(
+            (Decimal.parse((product.available.toString())) -
+                    Decimal.parse(item.measure.toString()))
+                .toString());
         await DB.instance.update(
           'Products',
-          {
-            'available': ProductList.instance
-                    .firstWhere((e) => e.barcode == item.product.barcode)
-                    .available +
-                item.measure
-          },
+          {'available': product.available},
           where: 'barcode = ?',
           whereArgs: [item.product.barcode],
         );
       }
       await OrdersAPI.deleteProcessed(widget.order.key);
       await ResultDialog.show(context, statusCode);
-      OrdersViewController.change(PreviousOrders(rebuild: true));
+      OrdersViewController.change(PreviousOrders());
     } catch (e) {
       print(e);
     }
@@ -419,9 +415,9 @@ class _PDFDocDisplayState extends State<PDFDocDisplay> {
                         child: Text(
                           !_inventoryReport
                               ? !widget.processed
-                                  ? 'DELETE'
-                                  : 'CONFIRM'
-                              : 'CLOSE',
+                                  ? I18N.text('CLOSE')
+                                  : I18N.text('CONFIRM')
+                              : I18N.text('CLOSE'),
                           style: TextStyle(
                             color: Theme.of(context).primaryColor,
                             fontWeight: FontWeight.bold,
@@ -432,7 +428,7 @@ class _PDFDocDisplayState extends State<PDFDocDisplay> {
                     ),
                     onTap: !_inventoryReport
                         ? () async => !widget.processed
-                            ? await _confirmDeletion()
+                            ? Navigator.pop(context)
                             : await _updateInventory()
                         : () => Navigator.pop(context),
                   ),
@@ -449,7 +445,7 @@ class _PDFDocDisplayState extends State<PDFDocDisplay> {
                         height: 48,
                         child: Center(
                           child: Text(
-                            'SAVE',
+                            I18N.text('SAVE'),
                             style: const TextStyle(
                               fontWeight: FontWeight.bold,
                               color: Colors.white,

@@ -6,7 +6,7 @@ abstract class NewOrder {
   static List<OrderItemModel> _instance = [];
   static List<OrderItemModel> get instance => _instance;
 
-  static void add(OrderItemModel value) {
+  static void add(OrderItemModel value, [bool newOrder = false]) {
     final OrderItemModel thisItem = _instance.singleWhere(
         (e) => value.product.measureType == Measure.kg
             ? (e.product.barcode.substring(0, 7) ==
@@ -21,14 +21,16 @@ abstract class NewOrder {
           measure: double.parse(
               (thisItem.measure + value.measure).toStringAsFixed(3)));
       _instance.removeWhere(
-        (e) =>
-            e.product.barcode.substring(0, 7) ==
-            value.product.barcode.substring(0, 7),
+        (e) => value.product.measureType == Measure.kg
+            ? (e.product.barcode.substring(0, 7) ==
+                value.product.barcode.substring(0, 7))
+            : (value.product.barcode == e.product.barcode),
       );
       _instance.add(updatedItem);
     }
-    LastScannedController.change(_instance
-        .firstWhere((e) => e.product.barcode == value.product.barcode));
+    if (!newOrder)
+      LastScannedController.change(_instance
+          .firstWhere((e) => e.product.barcode == value.product.barcode));
   }
 
   static void remove(OrderItemModel item) =>

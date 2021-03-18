@@ -37,9 +37,20 @@ class OrderList extends StatelessWidget {
                       Text(order.vehicle.model + ' ' + order.vehicle.plates),
                       Row(
                         children: [
+                          Padding(
+                            padding: const EdgeInsets.only(left: 12),
+                            child: Text(
+                              order.time.day.toString() +
+                                  '.' +
+                                  order.time.month.toString() +
+                                  '.' +
+                                  order.time.year.toString() +
+                                  '.',
+                            ),
+                          ),
                           if (UserData.isManager || UserData.isOwner)
                             IconButton(
-                              icon: Icon(Icons.list),
+                              icon: Icon(Icons.picture_as_pdf_outlined),
                               onPressed: () => showDialog(
                                 context: context,
                                 barrierColor: Colors.grey.shade200,
@@ -52,17 +63,6 @@ class OrderList extends StatelessWidget {
                                 ),
                               ),
                             ),
-                          Padding(
-                            padding: const EdgeInsets.only(left: 12),
-                            child: Text(
-                              order.time.day.toString() +
-                                  '.' +
-                                  order.time.month.toString() +
-                                  '.' +
-                                  order.time.year.toString() +
-                                  '.',
-                            ),
-                          ),
                         ],
                       ),
                     ],

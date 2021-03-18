@@ -23,10 +23,10 @@ class OrdersAPI {
               '.json'));
 
   static Future<http.Response> deleteCurrent([String key]) async =>
-      await http.delete(Uri.parse(
+      (await http.delete(Uri.parse(
           'https://rescape-72b1b-default-rtdb.europe-west1.firebasedatabase.app/orders/current' +
               (key != null ? '/$key' : '') +
-              '.json'));
+              '.json')));
 
   static Future orderPrepared(Map body, String key) async {
     await http.post(

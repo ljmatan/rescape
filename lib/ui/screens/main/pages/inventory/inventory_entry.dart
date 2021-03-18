@@ -54,8 +54,8 @@ class InventoryEntry extends StatelessWidget {
           context: context,
           barrierColor: Colors.white70,
           builder: (context) => EntrySectionDialog(
-            product: product,
             rebuildParent: rebuildParent,
+            product: product,
           ),
         ),
       ),

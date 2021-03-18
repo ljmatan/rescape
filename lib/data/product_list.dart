@@ -10,6 +10,7 @@ abstract class ProductList {
 
   static Future<void> setInstance(Map products, [bool cached = false]) async {
     _instance.clear();
+    _categories.clear();
     await DB.instance.delete('Products');
     for (var product in products.entries) {
       if (!cached)

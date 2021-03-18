@@ -4,17 +4,15 @@ import 'package:rescape/data/models/current_order_model.dart';
 import 'package:rescape/data/models/order_item_model.dart';
 import 'package:rescape/data/models/vehicle_model.dart';
 import 'package:rescape/data/product_list.dart';
+import 'package:rescape/data/user_data.dart';
 import 'package:rescape/logic/api/orders.dart';
 import 'package:rescape/logic/i18n/i18n.dart';
 import 'package:rescape/ui/screens/main/pages/orders/bloc/view_controller.dart';
 import 'package:rescape/ui/screens/main/pages/orders/selection_display.dart';
 import 'package:rescape/ui/screens/main/pages/orders/list/order_list.dart';
+import 'package:rescape/ui/shared/confirm_deletion_dialog.dart';
 
 class CurrentOrders extends StatefulWidget {
-  final bool rebuild;
-
-  CurrentOrders({this.rebuild: false});
-
   @override
   State<StatefulWidget> createState() {
     return _CurrentOrdersState();
@@ -22,48 +20,34 @@ class CurrentOrders extends StatefulWidget {
 }
 
 class _CurrentOrdersState extends State<CurrentOrders> {
-  static Future _getCurrent = OrdersAPI().getCurrent();
-
   static Key _futureKey = UniqueKey();
-
-  @override
-  void initState() {
-    super.initState();
-    if (widget.rebuild) _getCurrent = OrdersAPI().getCurrent();
-  }
 
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
       child: ListView(
         children: [
-          DecoratedBox(
-            decoration: BoxDecoration(color: Colors.white),
-            child: SizedBox(
-              height: 70,
-              child: Padding(
-                padding: const EdgeInsets.only(left: 12),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      I18N.text('Current Orders'),
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 18,
-                      ),
+          SizedBox(
+            height: 70,
+            child: Padding(
+              padding: const EdgeInsets.only(left: 12),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    I18N.text('Current Orders'),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 18,
                     ),
-                    IconButton(
-                      icon: Icon(Icons.refresh),
-                      onPressed: () => setState(
-                        () {
-                          _getCurrent = OrdersAPI().getCurrent();
-                          _futureKey = UniqueKey();
-                        },
-                      ),
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.refresh),
+                    onPressed: () => setState(
+                      () => _futureKey = UniqueKey(),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -73,7 +57,7 @@ class _CurrentOrdersState extends State<CurrentOrders> {
           ),
           FutureBuilder(
             key: _futureKey,
-            future: _getCurrent,
+            future: OrdersAPI().getCurrent(),
             builder: (context, orders) {
               if (orders.connectionState != ConnectionState.done ||
                   orders.hasError ||
@@ -129,23 +113,59 @@ class _CurrentOrdersState extends State<CurrentOrders> {
                             child: SizedBox(
                               width: MediaQuery.of(context).size.width,
                               height: 64,
-                              child: Center(
-                                child: Text(
-                                  order.time.day.toString() +
-                                      '.' +
-                                      order.time.month.toString() +
-                                      '.' +
-                                      order.time.year.toString() +
-                                      '. ' +
-                                      order.location.companyName +
-                                      (order.location.number != '0'
-                                          ? ' ' + order.location.number
-                                          : ''),
-                                  style: TextStyle(
-                                    color: Theme.of(context).primaryColor,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 16,
-                                  ),
+                              child: Padding(
+                                padding: const EdgeInsets.only(left: 12),
+                                child: Row(
+                                  mainAxisAlignment:
+                                      UserData.isOwner || UserData.isManager
+                                          ? MainAxisAlignment.spaceBetween
+                                          : MainAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      order.time.day.toString() +
+                                          '.' +
+                                          order.time.month.toString() +
+                                          '.' +
+                                          order.time.year.toString() +
+                                          '. ' +
+                                          order.location.companyName +
+                                          (order.location.number != '0'
+                                              ? ' ' + order.location.number
+                                              : ''),
+                                      style: TextStyle(
+                                        color: Theme.of(context).primaryColor,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16,
+                                      ),
+                                    ),
+                                    if (UserData.isOwner || UserData.isManager)
+                                      IconButton(
+                                        onPressed: () async {
+                                          Future<int> delete() async {
+                                            int statusCode = 400;
+                                            try {
+                                              statusCode = (await OrdersAPI
+                                                      .deleteCurrent(order.key))
+                                                  .statusCode;
+                                            } catch (e) {
+                                              print(e);
+                                            }
+                                            return statusCode;
+                                          }
+
+                                          showDialog(
+                                              context: context,
+                                              barrierColor: Colors.white70,
+                                              builder: (context) =>
+                                                  ConfirmDeletionDialog(
+                                                    future: delete,
+                                                    rebuildParent: () {},
+                                                  )).whenComplete(
+                                              () => setState(() {}));
+                                        },
+                                        icon: Icon(Icons.delete),
+                                      ),
+                                  ],
                                 ),
                               ),
                             ),

@@ -27,13 +27,24 @@ class EntrySectionDialog extends StatefulWidget {
 class _EntrySectionDialogState extends State<EntrySectionDialog> {
   TextEditingController _availableController;
 
-  Future<void> _delete(String comparisonBarcode) async =>
-      await DB.instance.delete('Products', where: 'barcode = ?', whereArgs: [
-        comparisonBarcode
-      ]).whenComplete(() => ProductsAPI.deleteProduct(comparisonBarcode)
-          .whenComplete(() => ProductList.instance
-              .removeWhere((e) => e.barcode == comparisonBarcode))
-          .whenComplete(() => widget.rebuildParent()));
+  Future<void> _delete(int comparisonID, String barcode) async {
+    try {
+      await DB.instance
+          .delete('Products',
+              where: 'product_id = ?', whereArgs: [comparisonID])
+          .whenComplete(() async {
+            for (var product
+                in ProductList.instance.where((e) => e.id == comparisonID))
+              await ProductsAPI.deleteProduct(product.barcode);
+          })
+          .whenComplete(() =>
+              ProductList.instance.removeWhere((e) => e.id == comparisonID))
+          .whenComplete(() => widget.rebuildParent());
+    } catch (e) {
+      return 400;
+    }
+    return 200;
+  }
 
   @override
   void initState() {
@@ -48,7 +59,7 @@ class _EntrySectionDialogState extends State<EntrySectionDialog> {
 
   @override
   Widget build(BuildContext context) {
-    void delete() => _delete(widget.product.barcode);
+    void delete() => _delete(widget.product.id, widget.product.barcode);
     return Align(
       alignment: Alignment.bottomCenter,
       child: Padding(
@@ -149,12 +160,11 @@ class _EntrySectionDialogState extends State<EntrySectionDialog> {
                               await DB.instance.update(
                                 'Products',
                                 {'section': i},
-                                where: 'barcode = ?',
-                                whereArgs: ['${widget.product.barcode}'],
+                                where: 'id = ?',
+                                whereArgs: ['${widget.product.id}'],
                               );
                               ProductList.instance
-                                  .firstWhere((e) =>
-                                      e.barcode == widget.product.barcode)
+                                  .firstWhere((e) => e.id == widget.product.id)
                                   .section = i;
                               Navigator.pop(context);
                               Navigator.pop(context);
@@ -197,6 +207,7 @@ class _EntrySectionDialogState extends State<EntrySectionDialog> {
                       onTap: () async {
                         await showDialog(
                           context: context,
+                          barrierColor: Colors.white70,
                           builder: (context) => ConfirmDeletionDialog(
                             rebuildParent: widget.rebuildParent,
                             future: delete,

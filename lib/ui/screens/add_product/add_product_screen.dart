@@ -280,8 +280,6 @@ class _AddProductScreenState extends State<AddProductScreen> {
                           ),
                           onTap: () async {
                             FocusScope.of(context).unfocus();
-                            print(_measureType == Measure.qty &&
-                                int.tryParse(_amountController.text) != null);
                             if (_internalCodeController.text.isNotEmpty &&
                                 int.tryParse(_internalCodeController.text) !=
                                     null &&

@@ -17,4 +17,24 @@ abstract class LocationList {
     for (var location in locations) _companies.add(location.companyName);
     _instance = locations;
   }
+
+  static void addToInstance(LocationModel model) {
+    _instance.add(model);
+    if (!_companies.contains(model.companyName))
+      _companies.add(model.companyName);
+  }
+
+  static void removeWhere(String id) {
+    _instance.removeWhere((e) => e.id == id);
+    Set<String> toRemove = {};
+    for (var companyName in _companies)
+      if (_instance.firstWhere(
+            (e) => e.companyName == companyName,
+            orElse: () => null,
+          ) ==
+          null) toRemove.add(companyName);
+    if (toRemove.isNotEmpty)
+      for (var companyName in toRemove)
+        _companies.removeWhere((e) => e == companyName);
+  }
 }

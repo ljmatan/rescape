@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:rescape/logic/cache/prefs.dart';
+import 'package:rescape/logic/i18n/locale_controller.dart';
 import 'package:rescape/ui/screens/auth/auth_screen.dart';
 import 'package:rescape/ui/screens/main/bloc/main_view_controller.dart';
 import 'package:rescape/ui/screens/main/bottom_nav_bar/nav_bar_display.dart';
@@ -43,37 +44,40 @@ class _MainViewState extends State<MainView> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      resizeToAvoidBottomInset: !_authenticated,
-      body: _authenticated
-          ? Stack(
-              children: [
-                Column(
-                  children: [
-                    Expanded(
-                      child: PageView(
-                        controller: _pageController,
-                        physics: const NeverScrollableScrollPhysics(),
-                        children: [
-                          HomePage(),
-                          InventoryPage(),
-                          OrdersPage(),
-                          ReportsPage(),
-                        ],
+    return StreamBuilder(
+      stream: LocaleController.stream,
+      builder: (context, locale) => Scaffold(
+        resizeToAvoidBottomInset: !_authenticated,
+        body: _authenticated
+            ? Stack(
+                children: [
+                  Column(
+                    children: [
+                      Expanded(
+                        child: PageView(
+                          controller: _pageController,
+                          physics: const NeverScrollableScrollPhysics(),
+                          children: [
+                            HomePage(),
+                            InventoryPage(),
+                            OrdersPage(),
+                            ReportsPage(),
+                          ],
+                        ),
                       ),
-                    ),
-                    SizedBox(
-                      height: 56 + MediaQuery.of(context).padding.bottom,
-                    ),
-                  ],
-                ),
-                Positioned(
-                  bottom: 0,
-                  child: BottomNavBar(),
-                ),
-              ],
-            )
-          : AuthScreen(authenticated: _successfulAuthentication),
+                      SizedBox(
+                        height: 56 + MediaQuery.of(context).padding.bottom,
+                      ),
+                    ],
+                  ),
+                  Positioned(
+                    bottom: 0,
+                    child: BottomNavBar(),
+                  ),
+                ],
+              )
+            : AuthScreen(authenticated: _successfulAuthentication),
+      ),
     );
   }
 

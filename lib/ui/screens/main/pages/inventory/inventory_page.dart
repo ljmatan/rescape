@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:rescape/data/models/product_model.dart';
 import 'package:rescape/data/product_list.dart';
 import 'package:rescape/logic/api/products.dart';
 import 'package:rescape/logic/i18n/i18n.dart';
@@ -7,6 +8,7 @@ import 'package:rescape/ui/screens/main/pages/inventory/filter_dialog/filter_dia
 import 'package:rescape/ui/screens/main/pages/inventory/inventory_entry.dart';
 import 'package:rescape/ui/shared/blocking_dialog.dart';
 import 'package:rescape/ui/shared/pdf_doc_display.dart';
+import 'package:decimal/decimal.dart';
 
 class InventoryPage extends StatefulWidget {
   @override
@@ -16,13 +18,46 @@ class InventoryPage extends StatefulWidget {
 }
 
 class _InventoryPageState extends State<InventoryPage> {
+  Set<int> _internalCodes;
+
+  List<ProductModel> _products;
+
+  void _init() {
+    if (_products == null)
+      _products = [];
+    else
+      _products.clear();
+    if (_internalCodes != null) _internalCodes.clear();
+    _internalCodes = {for (var product in ProductList.instance) product.id};
+    for (var code in _internalCodes) {
+      num itemAvailable = 0;
+      for (var product in ProductList.instance.where((e) => e.id == code))
+        itemAvailable += double.parse((Decimal.parse(itemAvailable.toString()) +
+                Decimal.parse(product.available.toString()))
+            .toString());
+      final ProductModel thisItem =
+          ProductList.instance.firstWhere((e) => e.id == code);
+      _products.add(ProductModel(
+        name: thisItem.name,
+        barcode: thisItem.barcode,
+        category: thisItem.category,
+        section: thisItem.section,
+        available: itemAvailable,
+        id: thisItem.id,
+        quantity: thisItem.quantity,
+        measureType: thisItem.measureType,
+      ));
+    }
+  }
+
   @override
   void initState() {
     super.initState();
     InventoryFilterController.init();
+    _init();
   }
 
-  void _rebuild() => setState(() {});
+  void _rebuild() => setState(() => _init());
 
   @override
   Widget build(BuildContext context) {
@@ -39,11 +74,7 @@ class _InventoryPageState extends State<InventoryPage> {
               height: MediaQuery.of(context).padding.top + 70,
               child: Padding(
                 padding: EdgeInsets.fromLTRB(
-                  12,
-                  MediaQuery.of(context).padding.top,
-                  12,
-                  0,
-                ),
+                    12, MediaQuery.of(context).padding.top, 12, 0),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -59,9 +90,10 @@ class _InventoryPageState extends State<InventoryPage> {
                       ),
                     ),
                     Row(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
                         IconButton(
-                          icon: Icon(Icons.list),
+                          icon: Icon(Icons.picture_as_pdf_outlined),
                           onPressed: () => showDialog(
                             context: context,
                             barrierColor: Colors.grey.shade200,
@@ -134,13 +166,13 @@ class _InventoryPageState extends State<InventoryPage> {
                       return Column(
                         children: [
                           if (!filter.hasData)
-                            for (var product in ProductList.instance)
+                            for (var product in _products)
                               InventoryEntry(
                                 product: product,
                                 rebuildParent: _rebuild,
                               )
                           else
-                            for (var product in ProductList.instance
+                            for (var product in _products
                                 .where((e) => e.category == filter.data))
                               InventoryEntry(
                                 product: product,

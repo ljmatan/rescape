@@ -12,17 +12,16 @@ import 'package:rescape/logic/i18n/i18n.dart';
 import 'package:rescape/logic/storage/local.dart';
 import 'package:rescape/ui/screens/main/pages/orders/selections/new_order/company_selection/company_search.dart';
 import 'package:rescape/ui/shared/result_dialog.dart';
+import 'package:decimal/decimal.dart';
 
 class ItemsListDialog extends StatefulWidget {
-  final String label;
   final Function scanning;
   final LocationModel location;
   final VehicleModel vehicle;
   final bool update;
 
   ItemsListDialog({
-    @required this.label,
-    @required this.scanning,
+    this.scanning,
     @required this.location,
     @required this.vehicle,
     @required this.update,
@@ -36,7 +35,7 @@ class ItemsListDialog extends StatefulWidget {
 
 class _ItemsListDialogState extends State<ItemsListDialog> {
   void _back() {
-    widget.scanning(true, false);
+    if (widget.scanning != null) widget.scanning(true, false);
     Navigator.pop(context);
   }
 
@@ -216,19 +215,15 @@ class _ItemsListDialogState extends State<ItemsListDialog> {
                             }
                         };
                         for (var item in NewOrder.instance) {
-                          ProductList.instance
-                              .firstWhere(
-                                  (e) => e.barcode == item.product.barcode)
-                              .available += item.measure;
+                          final product = ProductList.instance.firstWhere(
+                              (e) => e.barcode == item.product.barcode);
+                          product.available = double.parse(
+                              (Decimal.parse(product.available.toString()) +
+                                      Decimal.parse(item.measure.toString()))
+                                  .toString());
                           await DB.instance.update(
                             'Products',
-                            {
-                              'available': ProductList.instance
-                                      .firstWhere((e) =>
-                                          e.barcode == item.product.barcode)
-                                      .available +
-                                  item.measure
-                            },
+                            {'available': product.available},
                             where: 'barcode = ?',
                             whereArgs: [item.product.barcode],
                           );
@@ -237,7 +232,7 @@ class _ItemsListDialogState extends State<ItemsListDialog> {
                             await ProductsAPI.massProductAvailabilityUpdate(
                                 productsMap);
                         Navigator.pop(context);
-                        ResultDialog.show(context, response.statusCode);
+                        await ResultDialog.show(context, response.statusCode);
                         Navigator.pop(context);
                       } else if (widget.location != null) {
                         showDialog(
@@ -267,7 +262,7 @@ class _ItemsListDialogState extends State<ItemsListDialog> {
                           },
                         );
                         Navigator.pop(context);
-                        ResultDialog.show(context, response.statusCode);
+                        await ResultDialog.show(context, response.statusCode);
                         Navigator.pop(context);
                       } else if (CurrentOrder.instance != null) {
                         final DateTime date = await showDatePicker(
@@ -291,7 +286,7 @@ class _ItemsListDialogState extends State<ItemsListDialog> {
                                     child: CircularProgressIndicator(),
                                   ),
                                   onWillPop: () async => false));
-                          final response = await OrdersAPI.orderPrepared(
+                          final statusCode = await OrdersAPI.orderPrepared(
                             {
                               'location': CurrentOrder.instance.location.id,
                               'time': date.toIso8601String(),
@@ -310,7 +305,7 @@ class _ItemsListDialogState extends State<ItemsListDialog> {
                             CurrentOrder.instance.key,
                           );
                           Navigator.pop(context);
-                          ResultDialog.show(context, response.statusCode);
+                          await ResultDialog.show(context, statusCode);
                           Navigator.pop(context);
                         }
                       } else {
@@ -347,7 +342,7 @@ class _ItemsListDialogState extends State<ItemsListDialog> {
                             },
                           );
                           Navigator.pop(context);
-                          ResultDialog.show(context, response.statusCode);
+                          await ResultDialog.show(context, response.statusCode);
                           Navigator.pop(context);
                         }
                       }

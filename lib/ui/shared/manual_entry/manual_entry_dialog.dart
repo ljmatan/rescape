@@ -6,6 +6,10 @@ import 'package:rescape/logic/i18n/i18n.dart';
 import 'product_entry.dart';
 
 class ManualEntryDialogDialog extends StatefulWidget {
+  final bool newOrder;
+
+  ManualEntryDialogDialog({this.newOrder: false});
+
   @override
   State<StatefulWidget> createState() {
     return _ManualEntryDialogDialogState();
@@ -26,15 +30,15 @@ class _ManualEntryDialogDialogState extends State<ManualEntryDialogDialog> {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Colors.white,
+      color: Colors.grey.shade50,
       child: ListView(
+        padding: widget.newOrder ? EdgeInsets.zero : null,
         children: [
           Padding(
             padding: const EdgeInsets.all(18),
             child: SizedBox(
               width: MediaQuery.of(context).size.width,
               child: TextField(
-                autofocus: true,
                 controller: _searchTermController,
                 decoration: InputDecoration(
                   border: OutlineInputBorder(),
@@ -57,7 +61,7 @@ class _ManualEntryDialogDialogState extends State<ManualEntryDialogDialog> {
                             .contains(searchTerm.data.toLowerCase()) ||
                         e.barcode == searchTerm.data ||
                         e.id.toString().startsWith(searchTerm.data))))
-                  ProductEntry(product: product),
+                  ProductEntry(product: product, newOrder: widget.newOrder),
               ],
             ),
           ),

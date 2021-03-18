@@ -21,19 +21,15 @@ class _SplashScreenState extends State<SplashScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      try {
-        await Prefs.init();
+      await Prefs.init();
 
-        await DB.init();
+      await DB.init();
 
-        if (ProductList.instance.isEmpty) await ProductsAPI.getList();
+      if (ProductList.instance.isEmpty) await ProductsAPI.getList();
 
-        await Companies.getList();
+      await CompaniesAPI.getList();
 
-        UserData.init();
-      } catch (e) {
-        setState(() => _exception = e.toString());
-      }
+      UserData.init();
 
       if (_exception == null)
         Navigator.of(context).pushAndRemoveUntil(

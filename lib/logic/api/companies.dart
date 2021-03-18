@@ -21,12 +21,71 @@ abstract class Companies {
         companyName: LocationList.sheetInstance.feed.entry[i + 1].content.t,
         number: LocationList.sheetInstance.feed.entry[i + 2].content.t,
         address: LocationList.sheetInstance.feed.entry[i + 3].content.t,
-        city: LocationList.sheetInstance.feed.entry[i + 3].content.t,
+        city: LocationList.sheetInstance.feed.entry[i + 4].content.t,
       );
 
       locations.add(location);
     }
 
     LocationList.setInstance(locations);
+  }
+}
+
+abstract class CompaniesAPI {
+  static Future getList() async {
+    final response = await http.get(Uri.parse(
+        'https://rescape-72b1b-default-rtdb.europe-west1.firebasedatabase.app/companies.json'));
+    final decoded = jsonDecode(response.body);
+
+    List<LocationModel> locations = [];
+
+    for (int i = 0; i < decoded.entries.length; i++) {
+      final location = LocationModel(
+        id: decoded.entries.elementAt(i).key,
+        companyName: decoded.entries.elementAt(i).value['name'],
+        number: decoded.entries.elementAt(i).value['location'].toString(),
+        address: decoded.entries.elementAt(i).value['address'],
+        city: decoded.entries.elementAt(i).value['city'],
+      );
+
+      locations.add(location);
+    }
+
+    LocationList.setInstance(locations);
+  }
+
+  static Future<http.Response> addNew(Map body) async {
+    http.Response response;
+
+    try {
+      response = await http.post(
+          Uri.parse(
+              'https://rescape-72b1b-default-rtdb.europe-west1.firebasedatabase.app/companies.json'),
+          body: jsonEncode(body));
+    } catch (e) {
+      print('$e');
+    }
+
+    return response;
+  }
+
+  static Future remove(String toRemove) async {
+    int statusCode = 400;
+
+    try {
+      for (var location in LocationList.instance) {
+        if (location.companyName == toRemove) {
+          LocationList.removeWhere(location.id);
+          final response = await http.delete(Uri.parse(
+              'https://rescape-72b1b-default-rtdb.europe-west1.firebasedatabase.app/companies/${location.id}.json'));
+
+          statusCode = response.statusCode;
+        }
+      }
+    } catch (e) {
+      print('$e');
+    }
+
+    return statusCode;
   }
 }

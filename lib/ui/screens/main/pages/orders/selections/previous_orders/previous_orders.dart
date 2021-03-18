@@ -12,10 +12,6 @@ import 'package:rescape/ui/screens/main/pages/orders/list/order_list.dart';
 import 'package:rescape/ui/shared/confirm_deletion_dialog.dart';
 
 class PreviousOrders extends StatefulWidget {
-  final bool rebuild;
-
-  PreviousOrders({this.rebuild: false});
-
   @override
   State<StatefulWidget> createState() {
     return _PreviousOrdersState();
@@ -23,65 +19,51 @@ class PreviousOrders extends StatefulWidget {
 }
 
 class _PreviousOrdersState extends State<PreviousOrders> {
-  static Future _getProcessed = OrdersAPI().getProcessed();
-
   static Key _futureKey = UniqueKey();
 
   void _deleted() => OrdersViewController.change(SelectionDisplay());
-
-  @override
-  void initState() {
-    super.initState();
-    if (widget.rebuild) _getProcessed = OrdersAPI().getProcessed();
-  }
 
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
       child: ListView(
         children: [
-          DecoratedBox(
-            decoration: BoxDecoration(color: Colors.white),
-            child: SizedBox(
-              height: 70,
-              child: Padding(
-                padding: const EdgeInsets.only(left: 12),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      I18N.text('Previous Orders'),
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 18,
+          SizedBox(
+            height: 70,
+            child: Padding(
+              padding: const EdgeInsets.only(left: 12),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    I18N.text('Previous Orders'),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 18,
+                    ),
+                  ),
+                  Row(
+                    children: [
+                      IconButton(
+                        icon: Icon(Icons.refresh),
+                        onPressed: () => setState(
+                          () => _futureKey = UniqueKey(),
+                        ),
                       ),
-                    ),
-                    Row(
-                      children: [
-                        IconButton(
-                          icon: Icon(Icons.refresh),
-                          onPressed: () => setState(
-                            () {
-                              _getProcessed = OrdersAPI().getProcessed();
-                              _futureKey = UniqueKey();
-                            },
+                      IconButton(
+                        icon: Icon(Icons.delete_forever),
+                        onPressed: () => showDialog(
+                          context: context,
+                          barrierDismissible: false,
+                          barrierColor: Colors.white70,
+                          builder: (context) => ConfirmDeletionDialog(
+                            rebuildParent: _deleted,
                           ),
                         ),
-                        IconButton(
-                          icon: Icon(Icons.delete_forever),
-                          onPressed: () => showDialog(
-                            context: context,
-                            barrierDismissible: false,
-                            barrierColor: Colors.white70,
-                            builder: (context) => ConfirmDeletionDialog(
-                              rebuildParent: _deleted,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
           ),
@@ -91,7 +73,7 @@ class _PreviousOrdersState extends State<PreviousOrders> {
           ),
           FutureBuilder(
             key: _futureKey,
-            future: _getProcessed,
+            future: OrdersAPI().getProcessed(),
             builder: (context, orders) {
               if (orders.connectionState != ConnectionState.done ||
                   orders.hasError ||
