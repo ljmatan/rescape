@@ -171,18 +171,21 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
                                 barrierColor: Colors.white70,
                                 builder: (context) => WillPopScope(
                                   child: Center(
-                                      child: CircularProgressIndicator()),
+                                    child: CircularProgressIndicator(),
+                                  ),
                                   onWillPop: () async => false,
                                 ),
                               );
                               String username = _firstNameController.text +
                                   _lastNameController.text;
-                              username = username.replaceAll('č', 'c');
-                              username = username.replaceAll('ć', 'c');
-                              username = username.replaceAll('š', 's');
-                              username = username.replaceAll('ž', 'z');
-                              username =
-                                  username.replaceAll('đ', 'd').toLowerCase();
+                              username = username
+                                  .replaceAll('č', 'c')
+                                  .replaceAll('ć', 'c')
+                                  .replaceAll('š', 's')
+                                  .replaceAll('ž', 'z')
+                                  .replaceAll('đ', 'd')
+                                  .replaceAll(' ', '')
+                                  .toLowerCase();
                               int statusCode;
                               try {
                                 statusCode = (await OrganisationAPI.newEmployee(

@@ -1,18 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:rescape/data/models/company_model.dart';
-import 'package:rescape/data/models/order_item_model.dart';
+import 'package:rescape/data/current_order.dart';
 import 'package:rescape/ui/screens/scanner/current_order/current_order_list.dart';
 
 class OrderedItemsButton extends StatelessWidget {
   final Function scanning;
-  final LocationModel location;
-  final List<OrderItemModel> orderItems;
 
-  OrderedItemsButton({
-    @required this.scanning,
-    @required this.location,
-    @required this.orderItems,
-  });
+  OrderedItemsButton({@required this.scanning});
 
   @override
   Widget build(BuildContext context) {
@@ -27,8 +20,8 @@ class OrderedItemsButton extends StatelessWidget {
           context: context,
           barrierColor: Colors.white,
           builder: (context) => CurrentOrderList(
-            location: location,
-            orderItems: orderItems,
+            location: CurrentOrder.instance.location,
+            orderItems: CurrentOrder.instance.items,
           ),
         );
         scanning(true, false);

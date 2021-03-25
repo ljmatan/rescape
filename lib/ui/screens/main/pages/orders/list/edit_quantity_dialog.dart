@@ -84,9 +84,7 @@ class _EditAmountDialogState extends State<EditAmountDialog> {
                       onPressed: () async {
                         if (_formKey.currentState.validate()) {
                           widget.item.measure =
-                              (widget.item.product.measureType == Measure.kg
-                                  ? double.parse(_amountController.text)
-                                  : int.parse(_amountController.text));
+                              double.parse(_amountController.text);
                           Navigator.pop(context);
                           widget.rebuildParent(() {});
                         }

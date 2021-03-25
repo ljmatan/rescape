@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:rescape/data/company_list.dart';
 import 'package:rescape/logic/api/companies.dart';
+import 'package:rescape/logic/i18n/i18n.dart';
 import 'package:rescape/ui/screens/companies/add_company.dart';
 import 'package:rescape/ui/shared/confirm_deletion_dialog.dart';
 
@@ -28,7 +29,7 @@ class _CompaniesScreenState extends State<CompaniesScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Locations',
+                  I18N.text('Locations'),
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 18,
@@ -56,7 +57,7 @@ class _CompaniesScreenState extends State<CompaniesScreen> {
               ],
             ),
           ),
-          for (var company in LocationList.companies)
+          for (var location in LocationList.instance)
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
               child: GestureDetector(
@@ -75,7 +76,10 @@ class _CompaniesScreenState extends State<CompaniesScreen> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            company,
+                            location.companyName +
+                                (location.number == '0'
+                                    ? ''
+                                    : ' ${location.number}'),
                             style: const TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 16,
@@ -87,8 +91,8 @@ class _CompaniesScreenState extends State<CompaniesScreen> {
                               color: Colors.red.shade300,
                             ),
                             onPressed: () async {
-                              final Future _deleteCompany =
-                                  CompaniesAPI.remove(company);
+                              final _deleteCompany =
+                                  await CompaniesAPI.remove(location.id);
                               try {
                                 await showDialog(
                                   context: context,
@@ -98,6 +102,7 @@ class _CompaniesScreenState extends State<CompaniesScreen> {
                                   ),
                                 );
                               } catch (e) {
+                                print('failed');
                                 print('$e');
                               }
                               _rebuild();

@@ -81,6 +81,7 @@ abstract class Values {
       'City': 'City',
       'Location': 'Location',
       'Locations': 'Locations',
+      'Delete items?': 'Delete added products?',
     },
     'sr': {
       'New Product': 'Novi Proizvod',
@@ -162,6 +163,7 @@ abstract class Values {
       'City': 'Grad',
       'Location': 'Lokacija',
       'Locations': 'Lokacije',
+      'Delete items?': 'Obrisati dodane stavke?',
     },
   };
 }

@@ -89,6 +89,7 @@ class _CurrentOrdersState extends State<CurrentOrders> {
                                     product['barcode'].startsWith(e.barcode) ||
                                 e.barcode == product['barcode']),
                             measure: product['amount'],
+                            forceMeasure: (product['forceMeasure'] ?? false),
                           ),
                       ],
                       key: entry.key,

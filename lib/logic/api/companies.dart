@@ -73,16 +73,13 @@ abstract class CompaniesAPI {
     int statusCode = 400;
 
     try {
-      for (var location in LocationList.instance) {
-        if (location.companyName == toRemove) {
-          LocationList.removeWhere(location.id);
-          final response = await http.delete(Uri.parse(
-              'https://rescape-72b1b-default-rtdb.europe-west1.firebasedatabase.app/companies/${location.id}.json'));
+      final response = await http.delete(Uri.parse(
+          'https://rescape-72b1b-default-rtdb.europe-west1.firebasedatabase.app/companies/$toRemove.json'));
+      LocationList.remove(toRemove);
 
-          statusCode = response.statusCode;
-        }
-      }
+      statusCode = response.statusCode;
     } catch (e) {
+      print('failed here');
       print('$e');
     }
 

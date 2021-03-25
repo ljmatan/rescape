@@ -7,59 +7,7 @@ import 'package:rescape/data/new_order.dart';
 import 'package:rescape/logic/barcode/processing.dart';
 import 'package:rescape/logic/i18n/i18n.dart';
 
-enum PackageType { pcs, box }
-
-class PackageTypeSelection extends StatelessWidget {
-  final StreamController streamController;
-  final PackageType type;
-  final String label;
-
-  PackageTypeSelection({
-    @required this.streamController,
-    @required this.type,
-    @required this.label,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: StreamBuilder(
-        stream: streamController.stream,
-        initialData: PackageType.pcs,
-        builder: (context, selected) => GestureDetector(
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              border: Border.all(
-                color: selected.data == type
-                    ? Theme.of(context).primaryColor
-                    : Colors.grey,
-              ),
-              borderRadius: BorderRadius.circular(4),
-            ),
-            child: SizedBox(
-              width: MediaQuery.of(context).size.width,
-              height: 48,
-              child: Center(
-                child: Text(
-                  label,
-                  style: TextStyle(
-                    fontWeight: selected.data == PackageType.pcs
-                        ? FontWeight.bold
-                        : null,
-                    color: selected.data == type
-                        ? Theme.of(context).primaryColor
-                        : Colors.grey,
-                  ),
-                ),
-              ),
-            ),
-          ),
-          onTap: () => streamController.add(type),
-        ),
-      ),
-    );
-  }
-}
+enum PackageType { pcs, box, kg }
 
 class AddItemDialog extends StatefulWidget {
   final ProductModel product;
@@ -108,8 +56,8 @@ class _AddItemDialogState extends State<AddItemDialog> {
         ?.addListener(() => _quantity = double.tryParse(_qtyController.text));
     _weightController
         ?.addListener(() => _weight = double.tryParse(_weightController.text));
+    _packageTypeController = StreamController.broadcast();
     if (_measureInQty) {
-      _packageTypeController = StreamController.broadcast();
       _selectedType = PackageType.pcs;
       _packageTypeSubscription =
           _packageTypeController.stream.listen((type) => setState(() {
@@ -117,6 +65,15 @@ class _AddItemDialogState extends State<AddItemDialog> {
                 _qtyController.text = '1';
                 _selectedType = type;
               }));
+    } else {
+      _selectedType = PackageType.kg;
+      if (widget.newOrder)
+        _packageTypeSubscription =
+            _packageTypeController.stream.listen((type) => setState(() {
+                  _weight = 1;
+                  _weightController.text = '1';
+                  _selectedType = type;
+                }));
     }
   }
 
@@ -128,19 +85,36 @@ class _AddItemDialogState extends State<AddItemDialog> {
         _weight != null && _weight.runtimeType != double)
       ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(I18N.text('Please check your info'))));
-    else {
+    else
       NewOrder.add(
         OrderItemModel(
-          product: widget.product,
+          product: ProductModel(
+            id: widget.product.id,
+            name: widget.product.name,
+            barcode: widget.product.barcode,
+            category: widget.product.category,
+            measureType: _measureInQty
+                ? widget.product.measureType
+                : _selectedType == PackageType.pcs
+                    ? Measure.qty
+                    : Measure.kg,
+            quantity: _measureInQty
+                ? widget.product.quantity
+                : _selectedType == PackageType.pcs
+                    ? 1
+                    : null,
+            section: widget.product.section,
+          ),
           measure: _measureInQty
               ? _selectedType == PackageType.box
                   ? _quantity * widget.product.quantity
                   : _quantity
-              : _weight,
+              : _selectedType == PackageType.pcs
+                  ? _weight.round().toDouble()
+                  : _weight,
         ),
         widget.newOrder,
       );
-    }
   }
 
   @override
@@ -195,7 +169,26 @@ class _AddItemDialogState extends State<AddItemDialog> {
                                 onChanged: (value) =>
                                     _packageTypeController.add(value),
                               )
-                            : Text(I18N.text('Kgs') + ':'),
+                            : DropdownButton(
+                                value: _selectedType,
+                                items: [
+                                  DropdownMenuItem(
+                                    child: Text(
+                                      I18N.text('Kgs'),
+                                    ),
+                                    value: PackageType.kg,
+                                  ),
+                                  if (widget.newOrder)
+                                    DropdownMenuItem(
+                                      child: Text(
+                                        I18N.text('Pieces'),
+                                      ),
+                                      value: PackageType.pcs,
+                                    ),
+                                ],
+                                onChanged: (value) =>
+                                    _packageTypeController.add(value),
+                              ),
                         SizedBox(
                           width: 150,
                           height: 56,

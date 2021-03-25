@@ -40,6 +40,12 @@ class _ItemsListDialogState extends State<ItemsListDialog> {
   }
 
   @override
+  void initState() {
+    if (widget.scanning != null) widget.scanning(false, true);
+    super.initState();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Material(
       color: Colors.white,
@@ -64,20 +70,26 @@ class _ItemsListDialogState extends State<ItemsListDialog> {
                     top: MediaQuery.of(context).padding.top + 16,
                     bottom: 16,
                   ),
-                  child: Center(
-                    child: Text(
-                      widget.update != null && widget.update
-                          ? I18N.text('Inventory Update')
-                          : widget.location != null
-                              ? I18N.text('New Order')
-                              : CurrentOrder.instance != null
-                                  ? I18N.text('Current Order')
-                                  : I18N.text('New Return'),
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 19,
+                  child: Row(
+                    children: [
+                      IconButton(
+                        icon: Icon(Icons.delete_forever),
+                        onPressed: () => setState(() => NewOrder.clear()),
                       ),
-                    ),
+                      Text(
+                        widget.update != null && widget.update
+                            ? I18N.text('Inventory Update')
+                            : widget.location != null
+                                ? I18N.text('New Order')
+                                : CurrentOrder.instance != null
+                                    ? I18N.text('Current Order')
+                                    : I18N.text('New Return'),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 19,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 for (var item in NewOrder.instance)
@@ -196,43 +208,58 @@ class _ItemsListDialogState extends State<ItemsListDialog> {
                                 onWillPop: () async => false));
                         final Map productsMap = {
                           for (var item in NewOrder.instance)
-                            item.product.barcode: {
-                              'product_id': item.product.id,
-                              'available': ProductList.instance
-                                      .firstWhere((e) =>
-                                          e.barcode == item.product.barcode)
-                                      .available +
-                                  item.measure,
-                              'name': item.product.name,
-                              'barcode': item.product.measureType == Measure.kg
-                                  ? item.product.barcode.substring(0, 7)
-                                  : item.product.barcode,
-                              'measure': item.product.measureType == Measure.kg
-                                  ? 'KG'
-                                  : 'QTY' + item.product.quantity.toString(),
-                              'section': item.product.section,
-                              'category': item.product.category,
-                            }
+                            for (var product in ProductList.instance
+                                .where((e) => e.id == item.product.id))
+                              product.barcode: {
+                                'product_id': item.product.id,
+                                'available': ProductList.instance
+                                        .firstWhere((e) => item
+                                                    .product.measureType ==
+                                                Measure.qty
+                                            ? e.barcode == item.product.barcode
+                                            : e.barcode.substring(0, 7) ==
+                                                item.product.barcode
+                                                    .substring(0, 7))
+                                        .available +
+                                    item.measure,
+                                'name': product.name,
+                                'barcode': product.measureType == Measure.kg
+                                    ? product.barcode.substring(0, 7)
+                                    : product.barcode,
+                                'measure': item.product.measureType ==
+                                        Measure.kg
+                                    ? 'KG'
+                                    : 'QTY' + item.product.quantity.toString(),
+                                'section': product.section,
+                                'category': item.product.category,
+                              }
                         };
-                        for (var item in NewOrder.instance) {
-                          final product = ProductList.instance.firstWhere(
-                              (e) => e.barcode == item.product.barcode);
-                          product.available = double.parse(
-                              (Decimal.parse(product.available.toString()) +
+                        int statusCode = 400;
+                        try {
+                          final response =
+                              await ProductsAPI.massProductAvailabilityUpdate(
+                                  productsMap);
+                          statusCode = response.statusCode;
+                        } catch (e) {
+                          print(e);
+                        }
+                        if (statusCode == 200)
+                          for (var item in NewOrder.instance)
+                            for (var product in ProductList.instance
+                                .where((e) => e.id == item.product.id)) {
+                              product.available = double.parse((Decimal.parse(
+                                          product.available.toString()) +
                                       Decimal.parse(item.measure.toString()))
                                   .toString());
-                          await DB.instance.update(
-                            'Products',
-                            {'available': product.available},
-                            where: 'barcode = ?',
-                            whereArgs: [item.product.barcode],
-                          );
-                        }
-                        final response =
-                            await ProductsAPI.massProductAvailabilityUpdate(
-                                productsMap);
+                              await DB.instance.update(
+                                'Products',
+                                {'available': product.available},
+                                where: 'product_id = ?',
+                                whereArgs: [item.product.id],
+                              );
+                            }
                         Navigator.pop(context);
-                        await ResultDialog.show(context, response.statusCode);
+                        await ResultDialog.show(context, statusCode, true);
                         Navigator.pop(context);
                       } else if (widget.location != null) {
                         showDialog(
@@ -244,25 +271,38 @@ class _ItemsListDialogState extends State<ItemsListDialog> {
                                   child: CircularProgressIndicator(),
                                 ),
                                 onWillPop: () async => false));
-                        final response = await OrdersAPI.create(
-                          {
-                            'location': widget.location.id,
-                            'time': DateTime.now().toIso8601String(),
-                            'items': [
-                              for (var item in NewOrder.instance)
-                                {
-                                  'barcode': item.product.barcode,
-                                  'amount': item.measure,
-                                },
-                            ],
-                            'vehicle': {
-                              'model': widget.vehicle.model,
-                              'plates': widget.vehicle.plates,
+                        int statusCode = 400;
+                        try {
+                          final response = await OrdersAPI.create(
+                            {
+                              'location': widget.location.id,
+                              'time': DateTime.now().toIso8601String(),
+                              'items': [
+                                for (var item in NewOrder.instance)
+                                  {
+                                    'barcode': item.product.measureType ==
+                                            Measure.kg
+                                        ? item.product.barcode.substring(0, 7)
+                                        : item.product.barcode,
+                                    'amount': item.measure,
+                                    if (item.product.measureType ==
+                                            Measure.qty &&
+                                        item.product.barcode.length == 7)
+                                      'forceMeasure': true,
+                                  },
+                              ],
+                              'vehicle': {
+                                'model': widget.vehicle.model,
+                                'plates': widget.vehicle.plates,
+                              },
                             },
-                          },
-                        );
+                          );
+                          statusCode = response.statusCode;
+                        } catch (e) {
+                          print(e);
+                        }
                         Navigator.pop(context);
-                        await ResultDialog.show(context, response.statusCode);
+                        await ResultDialog.show(context, statusCode, true);
                         Navigator.pop(context);
                       } else if (CurrentOrder.instance != null) {
                         final DateTime date = await showDatePicker(
@@ -286,26 +326,35 @@ class _ItemsListDialogState extends State<ItemsListDialog> {
                                     child: CircularProgressIndicator(),
                                   ),
                                   onWillPop: () async => false));
-                          final statusCode = await OrdersAPI.orderPrepared(
-                            {
-                              'location': CurrentOrder.instance.location.id,
-                              'time': date.toIso8601String(),
-                              'items': [
-                                for (var item in NewOrder.instance)
-                                  {
-                                    'barcode': item.product.barcode,
-                                    'amount': item.measure,
-                                  },
-                              ],
-                              'vehicle': {
-                                'model': CurrentOrder.instance.vehicle.model,
-                                'plates': CurrentOrder.instance.vehicle.plates,
+                          int statusCode = 400;
+                          try {
+                            statusCode = await OrdersAPI.orderPrepared(
+                              {
+                                'location': CurrentOrder.instance.location.id,
+                                'time': date.toIso8601String(),
+                                'items': [
+                                  for (var item in NewOrder.instance)
+                                    {
+                                      'barcode': item.product.measureType ==
+                                              Measure.kg
+                                          ? item.product.barcode.substring(0, 7)
+                                          : item.product.barcode,
+                                      'amount': item.measure,
+                                    },
+                                ],
+                                'vehicle': {
+                                  'model': CurrentOrder.instance.vehicle.model,
+                                  'plates':
+                                      CurrentOrder.instance.vehicle.plates,
+                                },
                               },
-                            },
-                            CurrentOrder.instance.key,
-                          );
+                              CurrentOrder.instance.key,
+                            );
+                          } catch (e) {
+                            print(e);
+                          }
                           Navigator.pop(context);
-                          await ResultDialog.show(context, statusCode);
+                          await ResultDialog.show(context, statusCode, true);
                           Navigator.pop(context);
                         }
                       } else {
@@ -327,22 +376,31 @@ class _ItemsListDialogState extends State<ItemsListDialog> {
                                     child: CircularProgressIndicator(),
                                   ),
                                   onWillPop: () async => false));
-                          final response = await OrdersAPI.createReturn(
-                            {
-                              'time': DateTime.now().toIso8601String(),
-                              'items': [
-                                for (var item in NewOrder.instance)
-                                  {
-                                    'barcode': item.product.barcode,
-                                    'amount': item.measure,
-                                  },
-                              ],
-                              'submitter': UserData.instance.name,
-                              'location': location.id,
-                            },
-                          );
+                          int statusCode = 400;
+                          try {
+                            final response = await OrdersAPI.createReturn(
+                              {
+                                'time': DateTime.now().toIso8601String(),
+                                'items': [
+                                  for (var item in NewOrder.instance)
+                                    {
+                                      'barcode': item.product.measureType ==
+                                              Measure.kg
+                                          ? item.product.barcode.substring(0, 7)
+                                          : item.product.barcode,
+                                      'amount': item.measure,
+                                    },
+                                ],
+                                'submitter': UserData.instance.name,
+                                'location': location.id,
+                              },
+                            );
+                            statusCode = response.statusCode;
+                          } catch (e) {
+                            print(e);
+                          }
                           Navigator.pop(context);
-                          await ResultDialog.show(context, response.statusCode);
+                          await ResultDialog.show(context, statusCode, true);
                           Navigator.pop(context);
                         }
                       }
@@ -355,5 +413,11 @@ class _ItemsListDialogState extends State<ItemsListDialog> {
         ],
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    if (widget.scanning != null) widget.scanning(true, false);
+    super.dispose();
   }
 }

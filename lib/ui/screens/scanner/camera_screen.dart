@@ -22,6 +22,64 @@ import 'view_blocking.dart';
 import 'package:google_ml_kit/google_ml_kit.dart';
 import 'package:vibration/vibration.dart';
 
+class ClearItemsDialog extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: Alignment.bottomCenter,
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Material(
+          elevation: 2,
+          color: const Color(0xffEFEFEF),
+          borderRadius: BorderRadius.circular(8),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 18, top: 6),
+                  child: Text(
+                    I18N.text('Delete items?'),
+                    style: const TextStyle(fontSize: 18),
+                  ),
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        elevation: 0,
+                        onPrimary: Theme.of(context).primaryColor,
+                        primary: Colors.transparent,
+                      ),
+                      child: Text(I18N.text('Yes')),
+                      onPressed: () {
+                        NewOrder.clear();
+                        Navigator.pop(context);
+                      },
+                    ),
+                    const SizedBox(width: 14),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        primary: Theme.of(context).primaryColor,
+                        onPrimary: Colors.white,
+                      ),
+                      child: Text(I18N.text('No')),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class CameraScreen extends StatefulWidget {
   final LocationModel location;
   final VehicleModel vehicle;
@@ -113,7 +171,7 @@ class _CameraScreenState extends State<CameraScreen>
           Future.delayed(const Duration(seconds: 1), () {
             if (scannedProduct.measureType == Measure.kg)
               scannedProduct.barcode = scannedProduct.barcode.substring(0, 7);
-            _scanning(true);
+            if (!_processingOverriden) _scanning(true);
           });
         } else
           print('Code $barcode not registered');
@@ -168,70 +226,78 @@ class _CameraScreenState extends State<CameraScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      resizeToAvoidBottomInset: false,
-      backgroundColor: Colors.white,
-      body: _initialised
-          ? Stack(
-              children: [
-                CameraPreview(_controller),
-                ViewBlocking(),
-                ExitCameraButton(),
-                Positioned(
-                  left: 0,
-                  right: 0,
-                  top: MediaQuery.of(context).padding.top + 16,
-                  child: SizedBox(
-                    width: MediaQuery.of(context).size.width,
-                    height: 44,
-                    child: Center(
-                      child: Text(
-                        (widget.update
-                                ? I18N.text('Inventory Update')
-                                : widget.location != null
-                                    ? I18N.text('New Order')
-                                    : CurrentOrder.instance != null
-                                        ? I18N.text('Current Order')
-                                        : I18N.text('New Return'))
-                            .split(' ')
-                            .join('\n'),
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Theme.of(context).primaryColor,
-                          fontWeight: FontWeight.w900,
+    return WillPopScope(
+      child: Scaffold(
+        resizeToAvoidBottomInset: false,
+        backgroundColor: Colors.white,
+        body: _initialised
+            ? Stack(
+                children: [
+                  CameraPreview(_controller),
+                  ViewBlocking(),
+                  ExitCameraButton(),
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    top: MediaQuery.of(context).padding.top + 16,
+                    child: SizedBox(
+                      width: MediaQuery.of(context).size.width,
+                      height: 44,
+                      child: Center(
+                        child: Text(
+                          (widget.update
+                                  ? I18N.text('Inventory Update')
+                                  : widget.location != null
+                                      ? I18N.text('New Order')
+                                      : CurrentOrder.instance != null
+                                          ? I18N.text('Current Order')
+                                          : I18N.text('New Return'))
+                              .split(' ')
+                              .join('\n'),
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Theme.of(context).primaryColor,
+                            fontWeight: FontWeight.w900,
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
-                Positioned(
-                  right: 16,
-                  top: MediaQuery.of(context).padding.top + 16,
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      CurrentOrderButton(
-                        scanning: _scanning,
-                        location: widget.location,
-                        vehicle: widget.vehicle,
-                        update: widget.update,
-                      ),
-                      if (CurrentOrder.instance != null)
-                        OrderedItemsButton(
+                  Positioned(
+                    right: 16,
+                    top: MediaQuery.of(context).padding.top + 16,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        CurrentOrderButton(
                           scanning: _scanning,
-                          location: CurrentOrder.instance.location,
-                          orderItems: CurrentOrder.instance.items,
+                          location: widget.location,
+                          vehicle: widget.vehicle,
+                          update: widget.update,
                         ),
-                    ],
+                        if (CurrentOrder.instance != null)
+                          OrderedItemsButton(scanning: _scanning),
+                      ],
+                    ),
                   ),
-                ),
-                BottomSection(
-                  scanning: _scanning,
-                  setFlash: _controller.setFlashMode,
-                ),
-              ],
-            )
-          : Center(child: CircularProgressIndicator()),
+                  BottomSection(
+                    scanning: _scanning,
+                    setFlash: _controller.setFlashMode,
+                  ),
+                ],
+              )
+            : Center(child: CircularProgressIndicator()),
+      ),
+      onWillPop: () async {
+        if (NewOrder.instance.isNotEmpty)
+          await showDialog(
+            context: context,
+            barrierDismissible: false,
+            barrierColor: Colors.white70,
+            builder: (context) => ClearItemsDialog(),
+          );
+        return true;
+      },
     );
   }
 
@@ -241,7 +307,6 @@ class _CameraScreenState extends State<CameraScreen>
     _barcodeScanner.close();
     LastScannedController.dispose();
     CurrentOrder.setInstance(null);
-    NewOrder.clear();
     _soundPlayer.closeAudioSession();
     await _controller?.stopImageStream();
     _controller?.dispose();

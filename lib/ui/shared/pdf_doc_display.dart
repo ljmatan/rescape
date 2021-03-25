@@ -105,13 +105,6 @@ class _PDFDocDisplayState extends State<PDFDocDisplay> {
             ));
             break;
           }
-      for (var toRemove in _removalList)
-        for (var product in _itemsList
-            .where((e) => e.id == toRemove.id && e.barcode != toRemove.barcode))
-          toRemove.available = double.parse(
-              (Decimal.parse(product.available.toString()) +
-                      Decimal.parse(toRemove.available.toString()))
-                  .toString());
       for (var toRemove in _removalList) {
         _itemsList.removeWhere((e) => e.id == toRemove.id);
         _itemsList.add(toRemove);
@@ -200,41 +193,51 @@ class _PDFDocDisplayState extends State<PDFDocDisplay> {
       await ProductsAPI.getList();
       final Map productsMap = {
         for (var item in widget.order.items)
-          item.product.barcode: {
-            'product_id': item.product.id,
-            'available': ProductList.instance
-                    .firstWhere((e) => e.barcode == item.product.barcode)
-                    .available -
-                item.measure,
-            'name': item.product.name,
-            'barcode': item.product.measureType == Measure.kg
-                ? item.product.barcode.substring(0, 7)
-                : item.product.barcode,
-            'measure': item.product.measureType == Measure.kg
-                ? 'KG'
-                : 'QTY' + item.product.quantity.toString(),
-            'section': item.product.section,
-            'category': item.product.category,
-          }
+          for (var product
+              in ProductList.instance.where((e) => e.id == item.product.id))
+            product.barcode: {
+              'product_id': item.product.id,
+              'available': double.parse((Decimal.parse((ProductList.instance
+                              .firstWhere((e) =>
+                                  item.product.measureType == Measure.qty
+                                      ? e.barcode == item.product.barcode
+                                      : e.barcode.substring(0, 7) ==
+                                          item.product.barcode.substring(0, 7))
+                              .available)
+                          .toString()) -
+                      Decimal.parse(item.measure.toString()))
+                  .toString()),
+              'name': item.product.name,
+              'barcode': item.product.measureType == Measure.kg
+                  ? item.product.barcode.substring(0, 7)
+                  : item.product.barcode,
+              'measure': item.product.measureType == Measure.kg
+                  ? 'KG'
+                  : 'QTY' + item.product.quantity.toString(),
+              'section': item.product.section,
+              'category': item.product.category,
+            }
       };
       statusCode =
           (await ProductsAPI.massProductAvailabilityUpdate(productsMap))
               .statusCode;
-      for (var item in widget.order.items) {
-        final product = ProductList.instance
-            .firstWhere((e) => e.barcode == item.product.barcode);
-        product.available = double.parse(
-            (Decimal.parse((product.available.toString())) -
-                    Decimal.parse(item.measure.toString()))
-                .toString());
-        await DB.instance.update(
-          'Products',
-          {'available': product.available},
-          where: 'barcode = ?',
-          whereArgs: [item.product.barcode],
-        );
+      if (statusCode == 200) {
+        for (var item in widget.order.items)
+          for (var product
+              in ProductList.instance.where((e) => e.id == item.product.id)) {
+            product.available = double.parse(
+                (Decimal.parse((product.available.toString())) -
+                        Decimal.parse(item.measure.toString()))
+                    .toString());
+            await DB.instance.update(
+              'Products',
+              {'available': product.available},
+              where: 'barcode = ?',
+              whereArgs: [item.product.barcode],
+            );
+          }
+        await OrdersAPI.deleteProcessed(widget.order.key);
       }
-      await OrdersAPI.deleteProcessed(widget.order.key);
       await ResultDialog.show(context, statusCode);
       OrdersViewController.change(PreviousOrders());
     } catch (e) {

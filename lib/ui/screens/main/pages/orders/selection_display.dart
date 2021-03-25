@@ -69,13 +69,14 @@ class SelectionDisplay extends StatelessWidget {
       ),
       child: Column(
         children: [
-          if (UserData.isOwner)
+          if (UserData.isOwner || UserData.isManager)
             SelectionOption(
               label: I18N.text('Previous Orders'),
               icon: Icons.history,
               route: PreviousOrders(),
             ),
-          if (UserData.isOwner) const SizedBox(height: 12),
+          if (UserData.isOwner || UserData.isManager)
+            const SizedBox(height: 12),
           SelectionOption(
             label: I18N.text('Create an Order'),
             icon: Icons.add_circle_outline,

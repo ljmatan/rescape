@@ -58,7 +58,8 @@ class _CurrentOrderEntryState extends State<CurrentOrderEntry> {
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 12),
                     child: Text(
-                      widget.item.product.measureType == Measure.kg
+                      widget.item.product.measureType == Measure.kg &&
+                              !widget.item.forceMeasure
                           ? '${widget.item.measure}kg'
                           : '×${widget.item.measure.floor()}',
                       style: TextStyle(

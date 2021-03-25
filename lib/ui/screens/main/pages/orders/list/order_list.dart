@@ -102,7 +102,8 @@ class OrderList extends StatelessWidget {
                                 padding:
                                     const EdgeInsets.symmetric(horizontal: 12),
                                 child: Text(
-                                  item.product.measureType == Measure.kg
+                                  item.product.measureType == Measure.kg &&
+                                          !item.forceMeasure
                                       ? '${item.measure}kg'
                                       : '×${item.measure.floor()}',
                                   style: const TextStyle(
@@ -117,10 +118,13 @@ class OrderList extends StatelessWidget {
                       onTap: processed
                           ? () async {
                               showDialog(
-                                  context: context,
-                                  barrierColor: Colors.white70,
-                                  builder: (context) => EditAmountDialog(
-                                      item: item, rebuildParent: newState));
+                                context: context,
+                                barrierColor: Colors.white70,
+                                builder: (context) => EditAmountDialog(
+                                  item: item,
+                                  rebuildParent: newState,
+                                ),
+                              );
                             }
                           : null,
                     ),

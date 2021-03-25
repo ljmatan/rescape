@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:rescape/data/new_order.dart';
+import 'package:rescape/ui/screens/scanner/camera_screen.dart';
 
 class ExitCameraButton extends StatelessWidget {
   @override
@@ -23,7 +25,16 @@ class ExitCameraButton extends StatelessWidget {
             ),
           ),
         ),
-        onTap: () => Navigator.pop(context),
+        onTap: () async {
+          if (NewOrder.instance.isNotEmpty)
+            await showDialog(
+              context: context,
+              barrierDismissible: false,
+              barrierColor: Colors.white70,
+              builder: (context) => ClearItemsDialog(),
+            );
+          Navigator.pop(context);
+        },
       ),
     );
   }

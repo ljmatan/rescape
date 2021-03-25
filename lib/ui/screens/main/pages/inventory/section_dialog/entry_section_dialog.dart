@@ -27,18 +27,19 @@ class EntrySectionDialog extends StatefulWidget {
 class _EntrySectionDialogState extends State<EntrySectionDialog> {
   TextEditingController _availableController;
 
-  Future<void> _delete(int comparisonID, String barcode) async {
+  Future<void> _delete(String barcode) async {
     try {
       await DB.instance
-          .delete('Products',
-              where: 'product_id = ?', whereArgs: [comparisonID])
+          .delete('Products', where: 'barcode = ?', whereArgs: [barcode])
           .whenComplete(() async {
             for (var product
-                in ProductList.instance.where((e) => e.id == comparisonID))
+                in ProductList.instance.where((e) => e.barcode == barcode)) {
               await ProductsAPI.deleteProduct(product.barcode);
+              break;
+            }
           })
           .whenComplete(() =>
-              ProductList.instance.removeWhere((e) => e.id == comparisonID))
+              ProductList.instance.removeWhere((e) => e.barcode == barcode))
           .whenComplete(() => widget.rebuildParent());
     } catch (e) {
       return 400;
@@ -59,7 +60,7 @@ class _EntrySectionDialogState extends State<EntrySectionDialog> {
 
   @override
   Widget build(BuildContext context) {
-    void delete() => _delete(widget.product.id, widget.product.barcode);
+    void delete() => _delete(widget.product.barcode);
     return Align(
       alignment: Alignment.bottomCenter,
       child: Padding(
@@ -156,7 +157,10 @@ class _EntrySectionDialogState extends State<EntrySectionDialog> {
                                     Center(child: CircularProgressIndicator()));
                             try {
                               await ProductsAPI.setProductSection(
-                                  widget.product.barcode, i);
+                                  widget.product.measureType == Measure.kg
+                                      ? widget.product.barcode.substring(0, 7)
+                                      : widget.product.barcode,
+                                  i);
                               await DB.instance.update(
                                 'Products',
                                 {'section': i},
@@ -275,6 +279,7 @@ class _EntrySectionDialogState extends State<EntrySectionDialog> {
                                       content: Text(I18N
                                           .text('You must enter a number'))));
                             } else {
+                              FocusScope.of(context).unfocus();
                               showDialog(
                                 context: context,
                                 barrierDismissible: false,
@@ -288,10 +293,19 @@ class _EntrySectionDialogState extends State<EntrySectionDialog> {
                               try {
                                 final double newAmount =
                                     double.parse(_availableController.text);
-                                final response =
-                                    await ProductsAPI.setProductAvailability(
-                                        widget.product.barcode, newAmount);
-                                if (response.statusCode == 200) {
+                                int statusCode = 400;
+                                for (var product in ProductList.instance
+                                    .where((e) => e.id == widget.product.id)) {
+                                  final response =
+                                      await ProductsAPI.setProductAvailability(
+                                          product.barcode, newAmount);
+                                  if (response.statusCode != 200) {
+                                    statusCode = 400;
+                                    break;
+                                  } else
+                                    statusCode = 200;
+                                }
+                                if (statusCode == 200) {
                                   ProductList.instance
                                       .firstWhere((e) =>
                                           e.barcode == widget.product.barcode)
@@ -304,7 +318,7 @@ class _EntrySectionDialogState extends State<EntrySectionDialog> {
                                   );
                                 }
                                 Navigator.pop(context);
-                                ResultDialog.show(context, response.statusCode);
+                                ResultDialog.show(context, statusCode);
                               } catch (e) {
                                 Navigator.pop(context);
                                 ScaffoldMessenger.of(context).showSnackBar(

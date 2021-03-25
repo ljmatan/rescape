@@ -24,17 +24,8 @@ abstract class LocationList {
       _companies.add(model.companyName);
   }
 
-  static void removeWhere(String id) {
+  static void remove(String id) {
     _instance.removeWhere((e) => e.id == id);
-    Set<String> toRemove = {};
-    for (var companyName in _companies)
-      if (_instance.firstWhere(
-            (e) => e.companyName == companyName,
-            orElse: () => null,
-          ) ==
-          null) toRemove.add(companyName);
-    if (toRemove.isNotEmpty)
-      for (var companyName in toRemove)
-        _companies.removeWhere((e) => e == companyName);
+    for (var location in _instance) _companies.add(location.companyName);
   }
 }
