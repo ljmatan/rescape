@@ -212,24 +212,30 @@ class _ItemsListDialogState extends State<ItemsListDialog> {
                                 .where((e) => e.id == item.product.id))
                               product.barcode: {
                                 'product_id': item.product.id,
-                                'available': ProductList.instance
-                                        .firstWhere((e) => item
-                                                    .product.measureType ==
-                                                Measure.qty
-                                            ? e.barcode == item.product.barcode
-                                            : e.barcode.substring(0, 7) ==
-                                                item.product.barcode
-                                                    .substring(0, 7))
-                                        .available +
-                                    item.measure,
+                                'available': double.parse((Decimal.parse(
+                                            ProductList
+                                                .instance
+                                                .firstWhere((e) => item.product
+                                                            .measureType ==
+                                                        Measure.qty
+                                                    ? e.barcode ==
+                                                        item.product.barcode
+                                                    : e.barcode.substring(
+                                                            0, 7) ==
+                                                        item.product.barcode
+                                                            .substring(0, 7))
+                                                .available
+                                                .toString()) +
+                                        Decimal.parse(item.measure.toString()))
+                                    .toString()),
                                 'name': product.name,
                                 'barcode': product.measureType == Measure.kg
                                     ? product.barcode.substring(0, 7)
                                     : product.barcode,
-                                'measure': item.product.measureType ==
-                                        Measure.kg
-                                    ? 'KG'
-                                    : 'QTY' + item.product.quantity.toString(),
+                                'measure':
+                                    item.product.measureType == Measure.kg
+                                        ? 'KG'
+                                        : 'QTY' + product.quantity.toString(),
                                 'section': product.section,
                                 'category': item.product.category,
                               }

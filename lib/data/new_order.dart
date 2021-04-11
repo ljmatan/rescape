@@ -1,5 +1,4 @@
 import 'package:rescape/data/models/order_item_model.dart';
-import 'package:rescape/data/models/product_model.dart';
 import 'package:rescape/ui/screens/scanner/bloc/last_scanned_controller.dart';
 
 abstract class NewOrder {
@@ -8,10 +7,7 @@ abstract class NewOrder {
 
   static void add(OrderItemModel value, [bool newOrder = false]) {
     final OrderItemModel thisItem = _instance.singleWhere(
-        (e) => value.product.measureType == Measure.kg
-            ? (e.product.barcode.substring(0, 7) ==
-                value.product.barcode.substring(0, 7))
-            : (value.product.barcode == e.product.barcode),
+        (e) => e.product.id == value.product.id,
         orElse: () => null);
     if (thisItem == null)
       _instance.add(value);
@@ -20,12 +16,7 @@ abstract class NewOrder {
           product: value.product,
           measure: double.parse(
               (thisItem.measure + value.measure).toStringAsFixed(3)));
-      _instance.removeWhere(
-        (e) => value.product.measureType == Measure.kg
-            ? (e.product.barcode.substring(0, 7) ==
-                value.product.barcode.substring(0, 7))
-            : (value.product.barcode == e.product.barcode),
-      );
+      _instance.removeWhere((e) => e.product.id == value.product.id);
       _instance.add(updatedItem);
     }
     if (!newOrder)

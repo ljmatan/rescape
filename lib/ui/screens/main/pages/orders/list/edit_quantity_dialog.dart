@@ -57,7 +57,7 @@ class _EditAmountDialogState extends State<EditAmountDialog> {
                                 double.tryParse(input) == null ||
                             widget.item.product.measureType == Measure.qty &&
                                 int.tryParse(input) == null)
-                          return 'Please check your input';
+                          return I18N.text('Please check your info');
                         return null;
                       },
                     ),

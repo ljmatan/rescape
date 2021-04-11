@@ -118,6 +118,7 @@ class _AddCompanyDialogState extends State<AddCompanyDialog> {
                             ),
                           ),
                           onTap: () async {
+                            bool _refreshError;
                             FocusScope.of(context).unfocus();
                             if (_companyNameController.text.isNotEmpty &&
                                 _companyAddressController.text.isNotEmpty &&
@@ -136,18 +137,21 @@ class _AddCompanyDialogState extends State<AddCompanyDialog> {
                                       int.parse(_locationController.text),
                                 });
                                 statusCode = response.statusCode;
-                                LocationList.addToInstance(LocationModel(
-                                  id: response.body,
-                                  companyName: _companyNameController.text,
-                                  address: _companyAddressController.text,
-                                  city: _cityController.text,
-                                  number: _locationController.text,
-                                ));
+                                if (statusCode == 200)
+                                  try {
+                                    await CompaniesAPI.getList();
+                                  } catch (e) {
+                                    _refreshError = true;
+                                  }
                               } catch (e) {
-                                print('e');
+                                print(e);
                               }
                               Navigator.pop(context);
-                              ResultDialog.show(context, statusCode);
+                              await ResultDialog.show(context, statusCode);
+                              if (_refreshError)
+                                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                                    content: Text(
+                                        'Kompanija uspešno dodana na server, ali ne i u app. Molimo skroz izađite pa ponovno uđite.')));
                             } else
                               ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                                   content: Text(I18N.text(

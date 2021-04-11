@@ -213,7 +213,7 @@ class _PDFDocDisplayState extends State<PDFDocDisplay> {
                   : item.product.barcode,
               'measure': item.product.measureType == Measure.kg
                   ? 'KG'
-                  : 'QTY' + item.product.quantity.toString(),
+                  : 'QTY' + product.quantity.toString(),
               'section': item.product.section,
               'category': item.product.category,
             }

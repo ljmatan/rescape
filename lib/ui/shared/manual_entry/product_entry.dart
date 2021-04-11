@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:rescape/data/models/product_model.dart';
+import 'package:rescape/data/product_list.dart';
 import 'package:rescape/ui/screens/scanner/new_order_elements/add_item_dialog.dart';
 
 class ProductEntry extends StatelessWidget {
@@ -31,7 +32,15 @@ class ProductEntry extends StatelessWidget {
                 Expanded(
                   child: Align(
                     alignment: Alignment.centerLeft,
-                    child: Text(product.name),
+                    child: Text(
+                      '${product.name}' +
+                          (ProductList.instance
+                                      .where((e) => e.id == product.id)
+                                      .length >
+                                  1
+                              ? ' ×${product.quantity}'
+                              : ''),
+                    ),
                   ),
                 ),
                 Padding(
